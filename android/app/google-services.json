@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "155512331081",
+    "project_id": "english-center-manager",
+    "storage_bucket": "english-center-manager.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:155512331081:android:669edbec4bd8acf7de1898",
+        "android_client_info": {
+          "package_name": "com.example.trungtam_anhngu"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBbendaRSaaBV157lDuV9VDTmsOXpn0Ljs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
