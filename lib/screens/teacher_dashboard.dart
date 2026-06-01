@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../services/auth_service.dart';
+import 'evaluation_form.dart';
 
 class TeacherDashboard extends StatefulWidget {
   const TeacherDashboard({super.key});
@@ -11,349 +13,314 @@ class TeacherDashboard extends StatefulWidget {
 
 class _TeacherDashboardState extends State<TeacherDashboard> {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final AuthService _authService = AuthService();
   final User? currentUser = FirebaseAuth.instance.currentUser;
 
-  // HÀM 1: GỬI BÁO CÁO NHANH
-  Future<void> _submitQuickFeedback(String classId, String className, String content) async {
-    await _db.collection('reports').add({
-      'type': 'quick',
-      'class_id': classId,
-      'class_name': className,
-      'teacher_id': currentUser!.uid,
-      'content': content,
-      'timestamp': FieldValue.serverTimestamp(),
-    });
-  }
-
-  // HÀM 2: LƯU ĐÁNH GIÁ ĐỊNH KỲ (Hỗ trợ cả THÊM MỚI và CẬP NHẬT)
-  Future<void> _submitPeriodicEvaluation({
-    String? reportId,
-    required String studentId,
-    required String classId,
-    required String score,
-    required String attitude,
-    required String comment
-  }) async {
-    if (reportId == null) {
-      // Nếu không có reportId -> Là Thêm mới
-      await _db.collection('reports').add({
-        'type': 'periodic',
-        'student_id': studentId,
-        'class_id': classId,
-        'teacher_id': currentUser!.uid,
-        'score': score,
-        'attitude': attitude,
-        'comment': comment,
-        'timestamp': FieldValue.serverTimestamp(),
-      });
-    } else {
-      // Nếu có reportId -> Là Cập nhật (Sửa)
-      await _db.collection('reports').doc(reportId).update({
-        'score': score,
-        'attitude': attitude,
-        'comment': comment,
-        // Không cập nhật lại timestamp để giữ nguyên ngày đánh giá ban đầu
-      });
-    }
-  }
-
-  // DIALOG: BÁO CÁO NHANH
-  void _showQuickFeedbackDialog(String classId, String className) {
+  // HÀM: Báo cáo nhanh sau tiết
+  Future<void> _submitQuickFeedback(String classId, String className) async {
     final contentController = TextEditingController();
+    
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text("Báo cáo nhanh\nLớp: $className"),
+      builder: (context) => AlertDialog(
+        title: Text("Báo Cáo Nhanh\nLớp: $className", style: const TextStyle(color: Colors.amber)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         content: TextField(
           controller: contentController,
           maxLines: 4,
-          decoration: const InputDecoration(hintText: "Nhập tình hình lớp học...", border: OutlineInputBorder()),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text("Hủy")),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-            onPressed: () async {
-              if (contentController.text.isNotEmpty) {
-                Navigator.pop(dialogContext);
-                await _submitQuickFeedback(classId, className, contentController.text);
-                if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Đã gửi báo cáo!"), backgroundColor: Colors.green));
-              }
-            },
-            child: const Text("Gửi", style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // DIALOG: FORM NHẬP / SỬA ĐÁNH GIÁ
-  void _showEvaluationInputDialog(String studentId, String classId, {String? reportId, String? currentScore, String? currentAttitude, String? currentComment}) {
-    final scoreController = TextEditingController(text: currentScore);
-    final attitudeController = TextEditingController(text: currentAttitude);
-    final commentController = TextEditingController(text: currentComment);
-
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(reportId == null ? "Thêm Đánh Giá Mới" : "Sửa Đánh Giá"),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(controller: scoreController, decoration: const InputDecoration(labelText: "Điểm số (VD: 8.5)")),
-              const SizedBox(height: 10),
-              TextField(controller: attitudeController, decoration: const InputDecoration(labelText: "Thái độ học tập")),
-              const SizedBox(height: 10),
-              TextField(controller: commentController, maxLines: 3, decoration: const InputDecoration(labelText: "Nhận xét chi tiết")),
-            ],
+          decoration: InputDecoration(
+            hintText: "Nhập tình hình lớp học hôm nay...",
+            filled: true,
+            fillColor: Colors.amber.shade50,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text("Hủy")),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Hủy", style: TextStyle(color: Colors.grey))),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.amber.shade600, foregroundColor: Colors.white),
             onPressed: () async {
-              if (scoreController.text.isNotEmpty && commentController.text.isNotEmpty) {
-                Navigator.pop(dialogContext); // Đóng form nhập liệu
-                await _submitPeriodicEvaluation(
-                    reportId: reportId,
-                    studentId: studentId,
-                    classId: classId,
-                    score: scoreController.text,
-                    attitude: attitudeController.text,
-                    comment: commentController.text
-                );
-                if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Đã lưu đánh giá!"), backgroundColor: Colors.green));
-              } else {
-                ScaffoldMessenger.of(dialogContext).showSnackBar(const SnackBar(content: Text("Vui lòng nhập đủ Điểm và Nhận xét")));
+              if (contentController.text.trim().isNotEmpty) {
+                Navigator.pop(context);
+                await _db.collection('reports').add({
+                  'type': 'feedback',
+                  'teacher_id': currentUser!.uid,
+                  'class_id': classId,
+                  'content': contentController.text.trim(),
+                  'status': 'Chưa đọc',
+                  'timestamp': FieldValue.serverTimestamp(),
+                });
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Đã gửi báo cáo nhanh!"), backgroundColor: Colors.green));
               }
             },
-            child: const Text("Lưu", style: TextStyle(color: Colors.white)),
+            child: const Text("Gửi Báo Cáo"),
           ),
         ],
-      ),
-    );
-  }
-
-  // BOTTOM SHEET: LỊCH SỬ ĐÁNH GIÁ CỦA 1 HỌC VIÊN
-  void _showStudentEvaluationHistory(String studentId, String studentName, String classId) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (sheetContext) => SizedBox(
-        height: MediaQuery.of(context).size.height * 0.85, // Chiếm 85% màn hình
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(child: Text("Lịch sử: $studentName", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold))),
-                  IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(sheetContext)),
-                ],
-              ),
-            ),
-            const Divider(),
-            Expanded(
-              child: StreamBuilder<QuerySnapshot>(
-                // Truy vấn lấy các báo cáo của riêng học viên này trong lớp này, mới nhất xếp trên
-                stream: _db.collection('reports')
-                    .where('type', isEqualTo: 'periodic')
-                    .where('student_id', isEqualTo: studentId)
-                    .where('class_id', isEqualTo: classId)
-                    .where('teacher_id', isEqualTo: currentUser!.uid)
-                    .orderBy('timestamp', descending: true)
-                    .snapshots(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
-                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) return const Center(child: Text("Học viên này chưa có đánh giá nào."));
-
-                  var reports = snapshot.data!.docs;
-
-                  return ListView.builder(
-                    itemCount: reports.length,
-                    padding: const EdgeInsets.all(12),
-                    itemBuilder: (context, index) {
-                      var r = reports[index];
-                      DateTime? date = (r['timestamp'] as Timestamp?)?.toDate();
-                      String dateStr = date != null ? "${date.day}/${date.month}/${date.year}" : "Mới đây";
-
-                      return Card(
-                        elevation: 2,
-                        margin: const EdgeInsets.only(bottom: 12),
-                        child: Padding(
-                          padding: const EdgeInsets.all(12.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text("Ngày: $dateStr", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
-                                  Row(
-                                    children: [
-                                      Text("Điểm: ${r['score']}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.redAccent)),
-                                      const SizedBox(width: 10),
-                                      // NÚT SỬA ĐÁNH GIÁ
-                                      InkWell(
-                                        onTap: () => _showEvaluationInputDialog(
-                                            studentId, classId,
-                                            reportId: r.id,
-                                            currentScore: r['score'],
-                                            currentAttitude: r['attitude'],
-                                            currentComment: r['comment']
-                                        ),
-                                        child: const Icon(Icons.edit, color: Colors.orange, size: 20),
-                                      )
-                                    ],
-                                  ),
-                                ],
-                              ),
-                              const Divider(),
-                              Text("Thái độ: ${r['attitude']}", style: const TextStyle(fontWeight: FontWeight.bold)),
-                              const SizedBox(height: 5),
-                              Text("Nhận xét: ${r['comment']}"),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent, padding: const EdgeInsets.symmetric(vertical: 12)),
-                  onPressed: () => _showEvaluationInputDialog(studentId, classId),
-                  icon: const Icon(Icons.add, color: Colors.white),
-                  label: const Text("Thêm Đánh Giá Mới", style: TextStyle(color: Colors.white, fontSize: 16)),
-                ),
-              ),
-            )
-          ],
-        ),
-      ),
-    );
-  }
-
-  // BOTTOM SHEET: DANH SÁCH HỌC VIÊN TRONG LỚP
-  void _showClassStudents(List<dynamic> studentIds, String classId) {
-    if (studentIds.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Lớp này chưa có học viên nào.")));
-      return;
-    }
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (sheetContext) => SizedBox(
-        height: MediaQuery.of(context).size.height * 0.7,
-        child: Column(
-          children: [
-            const Padding(padding: EdgeInsets.all(16.0), child: Text("Chọn Học viên để Đánh giá", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold))),
-            Expanded(
-              child: FutureBuilder<QuerySnapshot>(
-                future: _db.collection('users').where(FieldPath.documentId, whereIn: studentIds).get(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
-                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) return const Center(child: Text("Không tải được dữ liệu."));
-
-                  final students = snapshot.data!.docs;
-
-                  return ListView.builder(
-                    itemCount: students.length,
-                    itemBuilder: (context, index) {
-                      var s = students[index];
-                      return ListTile(
-                        leading: const CircleAvatar(backgroundColor: Colors.blueAccent, child: Icon(Icons.person, color: Colors.white)),
-                        title: Text("${s['name']} (${s['student_code']})", style: const TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: Text("Học phí: ${s['tuition_status']}"),
-                        trailing: ElevatedButton(
-                          onPressed: () {
-                            // Đóng danh sách học viên và mở Lịch sử đánh giá của học viên đó
-                            Navigator.pop(sheetContext);
-                            _showStudentEvaluationHistory(s.id, s['name'], classId);
-                          },
-                          child: const Text("Lịch sử / Đánh giá"),
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    if (currentUser == null) return const Scaffold(body: Center(child: Text("Vui lòng đăng nhập")));
+
     return Scaffold(
+      backgroundColor: const Color(0xFFFFFDF5), // Pastel Amber nhạt
       appBar: AppBar(
-        title: const Text("Giáo Viên"),
-        backgroundColor: Colors.blueAccent,
-        foregroundColor: Colors.white,
+        centerTitle: true,
+        leading: Navigator.canPop(context) ? IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.brown),
+          onPressed: () => Navigator.pop(context),
+        ) : const SizedBox(),
+        title: const Text("GIẢNG VIÊN", 
+          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: Colors.brown, letterSpacing: 1.2)),
+        backgroundColor: Colors.amber.shade300,
+        elevation: 0,
         actions: [
-          IconButton(icon: const Icon(Icons.logout), onPressed: () => FirebaseAuth.instance.signOut())
+          IconButton(
+            icon: const Icon(Icons.power_settings_new_rounded, color: Colors.red),
+            onPressed: () async {
+              bool confirm = await showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text("Xác nhận"),
+                  content: const Text("Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?"),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Hủy")),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, foregroundColor: Colors.white),
+                      onPressed: () => Navigator.pop(context, true), 
+                      child: const Text("Đăng xuất")
+                    ),
+                  ],
+                ),
+              ) ?? false;
+              if (confirm) await _authService.logout();
+            },
+          ),
+          const SizedBox(width: 8),
         ],
       ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: _db.collection('classes').where('teacher_id', isEqualTo: currentUser?.uid).snapshots(),
+        // Lọc danh sách lớp theo teacher_id
+        stream: _db.collection('classes').where('teacher_id', isEqualTo: currentUser!.uid).snapshots(),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) return const Center(child: Text("Bạn chưa được phân công lớp nào."));
+          if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator(color: Colors.amber));
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) return const Center(child: Text("Bạn chưa được phân công lớp nào.", style: TextStyle(color: Colors.brown)));
 
           final classes = snapshot.data!.docs;
 
           return ListView.builder(
+            padding: const EdgeInsets.all(16),
             itemCount: classes.length,
-            padding: const EdgeInsets.all(8),
             itemBuilder: (context, index) {
-              var c = classes[index];
+              var c = classes[index].data() as Map<String, dynamic>;
+              String classId = classes[index].id;
               List<dynamic> studentIds = c['student_ids'] ?? [];
 
               return Card(
-                elevation: 4,
-                margin: const EdgeInsets.symmetric(vertical: 8),
+                elevation: 2,
+                margin: const EdgeInsets.only(bottom: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                color: Colors.white,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(20),
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => ClassStudentsScreen(classId: classId, className: c['name'], studentIds: studentIds))),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(c['name'], style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.brown)),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(color: Colors.amber.shade100, borderRadius: BorderRadius.circular(20)),
+                              child: Text("${studentIds.length} Học viên", style: TextStyle(color: Colors.amber.shade900, fontWeight: FontWeight.bold)),
+                            )
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.amber.shade50,
+                              foregroundColor: Colors.amber.shade900,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.amber.shade300)),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                            onPressed: () => _submitQuickFeedback(classId, c['name']),
+                            icon: const Icon(Icons.flash_on_rounded),
+                            label: const Text("Báo Cáo Nhanh Sau Tiết"),
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
+// ==========================================
+// MÀN HÌNH DANH SÁCH HỌC VIÊN CỦA LỚP
+// ==========================================
+class ClassStudentsScreen extends StatelessWidget {
+  final String classId;
+  final String className;
+  final List<dynamic> studentIds;
+
+  const ClassStudentsScreen({super.key, required this.classId, required this.className, required this.studentIds});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFFFFDF5),
+      appBar: AppBar(
+        title: Text(className, style: const TextStyle(color: Colors.brown)),
+        backgroundColor: Colors.amber.shade300,
+        iconTheme: const IconThemeData(color: Colors.brown),
+      ),
+      body: studentIds.isEmpty
+          ? const Center(child: Text("Lớp chưa có học viên", style: TextStyle(color: Colors.brown)))
+          : FutureBuilder<QuerySnapshot>(
+              future: FirebaseFirestore.instance.collection('users').where(FieldPath.documentId, whereIn: studentIds).get(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator(color: Colors.amber));
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) return const Center(child: Text("Không tải được dữ liệu"));
+
+                var students = snapshot.data!.docs;
+
+                return ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: students.length,
+                  itemBuilder: (context, index) {
+                    var s = students[index].data() as Map<String, dynamic>;
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      child: ListTile(
+                        leading: CircleAvatar(backgroundColor: Colors.amber.shade100, child: const Icon(Icons.person, color: Colors.brown)),
+                        title: Text(s['name'], style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.brown)),
+                        subtitle: Text(s['studentCode'] ?? s['student_code'] ?? 'N/A'),
+                        trailing: const Icon(Icons.chevron_right_rounded, color: Colors.amber),
+                        onTap: () {
+                          Navigator.push(context, MaterialPageRoute(
+                            builder: (context) => StudentHistoryScreen(
+                              studentId: students[index].id,
+                              studentName: s['name'],
+                              classId: classId,
+                            )
+                          ));
+                        },
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+    );
+  }
+}
+
+// ==========================================
+// MÀN HÌNH LỊCH SỬ ĐÁNH GIÁ CỦA 1 HỌC VIÊN
+// ==========================================
+class StudentHistoryScreen extends StatelessWidget {
+  final String studentId;
+  final String studentName;
+  final String classId;
+
+  const StudentHistoryScreen({super.key, required this.studentId, required this.studentName, required this.classId});
+
+  @override
+  Widget build(BuildContext context) {
+    final String teacherId = FirebaseAuth.instance.currentUser!.uid;
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFFFFDF5),
+      appBar: AppBar(
+        title: Text("Lịch sử: $studentName", style: const TextStyle(color: Colors.brown, fontSize: 18)),
+        backgroundColor: Colors.amber.shade300,
+        iconTheme: const IconThemeData(color: Colors.brown),
+      ),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance.collection('reports')
+            .where('type', isEqualTo: 'periodic')
+            .where('student_id', isEqualTo: studentId)
+            .where('teacher_id', isEqualTo: teacherId)
+            .orderBy('timestamp', descending: true)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator(color: Colors.amber));
+          if (snapshot.hasError) return Center(child: Text("Lỗi tải dữ liệu: ${snapshot.error}"));
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) return const Center(child: Text("Chưa có đánh giá nào", style: TextStyle(color: Colors.brown)));
+
+          var reports = snapshot.data!.docs;
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: reports.length,
+            itemBuilder: (context, index) {
+              var r = reports[index].data() as Map<String, dynamic>;
+              DateTime? date = (r['timestamp'] as Timestamp?)?.toDate();
+              String dateStr = date != null ? "${date.day}/${date.month}/${date.year}" : "N/A";
+
+              return Card(
+                elevation: 1,
+                margin: const EdgeInsets.only(bottom: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 child: Padding(
-                  padding: const EdgeInsets.all(12.0),
+                  padding: const EdgeInsets.all(16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(c['name'], style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.blueAccent)),
-                          Chip(label: Text("${studentIds.length} học viên")),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                            decoration: BoxDecoration(color: Colors.amber.shade100, borderRadius: BorderRadius.circular(8)),
+                            child: Text(dateStr, style: TextStyle(color: Colors.amber.shade900, fontWeight: FontWeight.bold)),
+                          ),
+                          Row(
+                            children: [
+                              Text("Điểm: ${r['scores'] ?? r['score']}", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.brown)),
+                              const SizedBox(width: 8),
+                              IconButton(
+                                icon: const Icon(Icons.edit_rounded, color: Colors.blueAccent),
+                                onPressed: () {
+                                  Navigator.push(context, MaterialPageRoute(
+                                    builder: (context) => EvaluationFormScreen(
+                                      studentId: studentId,
+                                      classId: classId,
+                                      reportId: reports[index].id,
+                                      initialData: r,
+                                    )
+                                  ));
+                                },
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                              )
+                            ],
+                          )
                         ],
                       ),
-                      const SizedBox(height: 15),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          OutlinedButton.icon(
-                            onPressed: () => _showQuickFeedbackDialog(c.id, c['name']),
-                            icon: const Icon(Icons.flash_on, color: Colors.orange),
-                            label: const Text("Báo cáo nhanh"),
-                          ),
-                          ElevatedButton.icon(
-                            onPressed: () => _showClassStudents(studentIds, c.id),
-                            icon: const Icon(Icons.checklist, color: Colors.white),
-                            label: const Text("Đánh giá định kỳ", style: TextStyle(color: Colors.white)),
-                            style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent),
-                          ),
-                        ],
-                      )
+                      const Divider(height: 24),
+                      Text("Thái độ: ${r['attitude']}", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.brown)),
+                      const SizedBox(height: 8),
+                      Text(r['comments'] ?? r['comment'] ?? '', style: const TextStyle(color: Colors.black87, fontStyle: FontStyle.italic)),
                     ],
                   ),
                 ),
@@ -361,6 +328,16 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
             },
           );
         },
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.push(context, MaterialPageRoute(
+            builder: (context) => EvaluationFormScreen(studentId: studentId, classId: classId)
+          ));
+        },
+        backgroundColor: Colors.amber.shade600,
+        icon: const Icon(Icons.add_rounded, color: Colors.white),
+        label: const Text("Thêm Đánh Giá", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
   }

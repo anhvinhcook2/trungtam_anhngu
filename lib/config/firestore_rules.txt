@@ -1,0 +1,64 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Hàm kiểm tra vai trò người dùng
+    function getRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    // 1. COLLECTION: USERS
+    match /users/{userId} {
+      // Admin: Toàn quyền
+      allow read, write: if request.auth != null && getRole() == 'admin';
+      
+      // Người dùng: Đọc thông tin cá nhân
+      allow read: if request.auth != null && request.auth.uid == userId;
+      
+      // Public: Cho phép tìm kiếm qua studentCode (Dùng cho phụ huynh tra cứu)
+      // Cho phép list/query nếu có filter studentCode hoặc đọc field cụ thể
+      allow list: if request.query.limit <= 10 && (request.query.filters.size() > 0);
+      allow get: if resource.data.role == 'student';
+    }
+
+    // 2. COLLECTION: CLASSES
+    match /classes/{classId} {
+      allow read, write: if request.auth != null && getRole() == 'admin';
+      
+      // Giáo viên: Chỉ xem/sửa lớp mình phụ trách
+      allow read, update: if request.auth != null && 
+                          getRole() == 'teacher' && 
+                          resource.data.teacher_id == request.auth.uid;
+                          
+      // Học viên: Xem lớp mình tham gia
+      allow read: if request.auth != null && 
+                  getRole() == 'student' && 
+                  request.auth.uid in resource.data.student_ids;
+    }
+
+    // 3. COLLECTION: REPORTS
+    match /reports/{reportId} {
+      allow read, write: if request.auth != null && getRole() == 'admin';
+      
+      // Giáo viên: Tạo và quản lý báo cáo của mình
+      allow create: if request.auth != null && getRole() == 'teacher';
+      allow read, update: if request.auth != null && 
+                          getRole() == 'teacher' && 
+                          resource.data.teacher_id == request.auth.uid;
+      
+      // Học viên/Phụ huynh: Đọc báo cáo của chính mình
+      allow read: if (request.auth != null && resource.data.student_id == request.auth.uid) ||
+                  (resource.data.type == 'periodic'); // Cho phép tra cứu public cho periodic report
+    }
+
+    // 4. COLLECTION: SUPPORT TICKETS
+    match /supportTickets/{ticketId} {
+      allow read, write: if request.auth != null && getRole() == 'admin';
+      
+      // Học viên: Gửi và xem ticket của mình
+      allow create: if request.auth != null && getRole() == 'student';
+      allow read: if request.auth != null && resource.data.student_id == request.auth.uid;
+    }
+  }
+}

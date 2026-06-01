@@ -1,6 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:trungtam_anhngu/model/user_model.dart';
+import 'package:trungtam_anhngu/models/user_model.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -27,8 +27,8 @@ class AuthService {
           email: email,
           name: name,
           role: role,
-          // Nếu là học viên, có thể tạo mã số ngẫu nhiên hoặc để admin cấp sau
           studentCode: role == 'student' ? "ST${user.uid.substring(0, 5).toUpperCase()}" : null,
+          tuitionStatus: role == 'student' ? 'Chưa đóng' : 'N/A',
         );
 
         await _db.collection('users').doc(user.uid).set(newUser.toMap());
