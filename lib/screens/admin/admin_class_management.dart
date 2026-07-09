@@ -13,6 +13,8 @@ class _AdminClassManagementState extends State<AdminClassManagement> {
 
   void _showAddClassDialog() async {
     final nameC = TextEditingController();
+    final subjectC = TextEditingController();
+    int? selectedLevel;
     String? selectedTeacher;
     final teachers = await _db.collection('users').where('role', isEqualTo: 'teacher').get();
 
@@ -22,21 +24,38 @@ class _AdminClassManagementState extends State<AdminClassManagement> {
       builder: (context) => StatefulBuilder(builder: (context, setDialogState) {
         return AlertDialog(
           title: const Text("Tạo Lớp Mới"),
-          content: Column(mainAxisSize: MainAxisSize.min, children: [
-            TextField(controller: nameC, decoration: const InputDecoration(labelText: "Tên lớp")),
-            DropdownButton<String>(
-              isExpanded: true,
-              hint: const Text("Chọn giáo viên"),
-              value: selectedTeacher,
-              onChanged: (v) => setDialogState(() => selectedTeacher = v),
-              items: teachers.docs.map((d) => DropdownMenuItem(value: d.id, child: Text(d['name']))).toList(),
-            ),
-          ]),
+          content: SingleChildScrollView(
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              TextField(controller: nameC, decoration: const InputDecoration(labelText: "Tên lớp")),
+              TextField(controller: subjectC, decoration: const InputDecoration(labelText: "Tên môn học")),
+              DropdownButton<int>(
+                isExpanded: true,
+                hint: const Text("Chọn cấp độ (1-6)"),
+                value: selectedLevel,
+                onChanged: (v) => setDialogState(() => selectedLevel = v),
+                items: List.generate(6, (i) => i + 1).map((l) => DropdownMenuItem(value: l, child: Text("Cấp độ $l"))).toList(),
+              ),
+              DropdownButton<String>(
+                isExpanded: true,
+                hint: const Text("Chọn giáo viên"),
+                value: selectedTeacher,
+                onChanged: (v) => setDialogState(() => selectedTeacher = v),
+                items: teachers.docs.map((d) => DropdownMenuItem(value: d.id, child: Text(d['name']))).toList(),
+              ),
+            ]),
+          ),
           actions: [
             TextButton(onPressed: () => Navigator.pop(context), child: const Text("Hủy")),
             ElevatedButton(onPressed: () async {
-              if (nameC.text.isNotEmpty && selectedTeacher != null) {
-                await _db.collection('classes').add({'name': nameC.text, 'teacherId': selectedTeacher, 'studentList': []});
+              if (nameC.text.isNotEmpty && subjectC.text.isNotEmpty && selectedLevel != null && selectedTeacher != null) {
+                await _db.collection('classes').add({
+                  'name': nameC.text,
+                  'subject': subjectC.text,
+                  'level': selectedLevel,
+                  'teacherId': selectedTeacher,
+                  'studentIds': [],
+                  'isActive': true,
+                });
                 if (!context.mounted) return;
                 Navigator.pop(context);
               }
@@ -109,7 +128,7 @@ class _AdminClassManagementState extends State<AdminClassManagement> {
           ),
           actions: [
             ElevatedButton(onPressed: () async {
-              await _db.collection('classes').doc(classId).update({'studentList': selected});
+              await _db.collection('classes').doc(classId).update({'studentIds': selected});
               if (context.mounted) Navigator.pop(context);
             }, child: const Text("XÁC NHẬN CẬP NHẬT")),
           ],
@@ -152,6 +171,8 @@ class _AdminClassManagementState extends State<AdminClassManagement> {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 8),
+                    Text("${doc['subject'] ?? 'N/A'} - Cấp độ ${doc['level'] ?? 'N/A'}", style: const TextStyle(color: Colors.black54, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 12),
                     FutureBuilder<DocumentSnapshot>(
                       future: _db.collection('users').doc(doc['teacherId']).get(),
@@ -174,9 +195,9 @@ class _AdminClassManagementState extends State<AdminClassManagement> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text("Sỹ số: ${doc['studentList'].length} học viên", style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF64748B))),
+                        Text("Sỹ số: ${doc['studentIds'].length} học viên", style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF64748B))),
                         ElevatedButton(
-                          onPressed: () => _manageStudents(doc.id, doc['studentList']),
+                          onPressed: () => _manageStudents(doc.id, doc['studentIds']),
                           style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4F46E5), minimumSize: const Size(120, 40)),
                           child: const Text("QUẢN LÝ", style: TextStyle(fontSize: 12)),
                         ),

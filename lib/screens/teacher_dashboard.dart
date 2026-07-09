@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
 import 'evaluation_form.dart';
+import 'schedule_view.dart';
 
 class TeacherDashboard extends StatefulWidget {
   const TeacherDashboard({super.key});
@@ -78,6 +79,10 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
         backgroundColor: Colors.amber.shade300,
         elevation: 0,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.calendar_today_rounded),
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ScheduleView(teacherId: currentUser!.uid))),
+          ),
           IconButton(
             icon: const Icon(Icons.power_settings_new_rounded, color: Colors.red),
             onPressed: () async {
@@ -191,6 +196,12 @@ class ClassStudentsScreen extends StatelessWidget {
         title: Text(className, style: const TextStyle(color: Colors.brown)),
         backgroundColor: Colors.amber.shade300,
         iconTheme: const IconThemeData(color: Colors.brown),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.assignment_turned_in_rounded),
+            onPressed: () => _showAttendanceDialog(context),
+          ),
+        ],
       ),
       body: studentIds.isEmpty
           ? const Center(child: Text("Lớp chưa có học viên", style: TextStyle(color: Colors.brown)))
@@ -230,6 +241,53 @@ class ClassStudentsScreen extends StatelessWidget {
                 );
               },
             ),
+    );
+  }
+
+  void _showAttendanceDialog(BuildContext context) async {
+    final students = await FirebaseFirestore.instance.collection('users').where(FieldPath.documentId, whereIn: studentIds).get();
+    Map<String, String> attendance = {for (var s in students.docs) s.id: 'present'};
+    String dateStr = DateTime.now().toString().split(' ')[0];
+
+    if (!context.mounted) return;
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(builder: (context, setDialogState) {
+        return AlertDialog(
+          title: Text("Điểm danh ngày $dateStr"),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: students.docs.length,
+              itemBuilder: (context, i) {
+                var s = students.docs[i];
+                return ListTile(
+                  title: Text(s['name']),
+                  trailing: DropdownButton<String>(
+                    value: attendance[s.id],
+                    onChanged: (v) => setDialogState(() => attendance[s.id] = v!),
+                    items: ['present', 'absent', 'late'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
+                  ),
+                );
+              },
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text("Hủy")),
+            ElevatedButton(onPressed: () async {
+              await FirebaseFirestore.instance.collection('attendance').add({
+                'classId': classId,
+                'date': dateStr,
+                'records': attendance,
+              });
+              if (!context.mounted) return;
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Đã lưu điểm danh!")));
+            }, child: const Text("Lưu")),
+          ],
+        );
+      }),
     );
   }
 }

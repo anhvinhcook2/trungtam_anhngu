@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
-import '../navigation/auth_wrapper.dart';
+import 'auth_screen.dart';
+import 'schedule_view.dart';
+import 'chat_screen.dart';
 
 class StudentDashboard extends StatefulWidget {
   const StudentDashboard({super.key});
@@ -46,6 +47,13 @@ class _StudentDashboardState extends State<StudentDashboard> {
 
     if (confirm) {
       await _authService.logout();
+      if (mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const AuthScreen()),
+          (route) => false,
+        );
+      }
     }
   }
 
@@ -91,57 +99,6 @@ class _StudentDashboardState extends State<StudentDashboard> {
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
-  }
-
-  void _showSupportDialog() {
-    final msgController = TextEditingController();
-    
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text("Gửi Yêu Cầu Hỗ Trợ", style: TextStyle(color: Colors.amber)),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        content: TextField(
-          controller: msgController,
-          maxLines: 4,
-          decoration: InputDecoration(
-            hintText: "Nhập nội dung cần hỗ trợ...",
-            filled: true,
-            fillColor: Colors.amber.shade50,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text("Hủy", style: TextStyle(color: Colors.grey))),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.amber.shade600),
-            onPressed: () async {
-              final message = msgController.text.trim();
-              if (message.isNotEmpty) {
-                Navigator.pop(dialogContext);
-                try {
-                  await _db.collection('supportTickets').add({
-                    'student_code': _studentData?['studentCode'] ?? _studentData?['student_code'] ?? _searchController.text,
-                    'student_id': _studentUid,
-                    'message': message,
-                    'status': 'Chưa đọc',
-                    'createdAt': FieldValue.serverTimestamp(),
-                  });
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Yêu cầu đã được gửi"), backgroundColor: Colors.green));
-                  }
-                } catch (e) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Lỗi: $e"), backgroundColor: Colors.redAccent));
-                  }
-                }
-              }
-            },
-            child: const Text("Gửi Đi", style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    ).then((_) => msgController.dispose());
   }
 
   @override
@@ -221,6 +178,15 @@ class _StudentDashboardState extends State<StudentDashboard> {
                   children: [
                     // 3. Card Thông tin Học viên
                     _buildStudentInfoCard(),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ScheduleView(studentId: _studentUid))),
+                        icon: const Icon(Icons.calendar_today_rounded),
+                        label: const Text("XEM THỜI KHÓA BIỂU"),
+                      ),
+                    ),
                     const SizedBox(height: 32),
                     
                     const Text("Lịch Sử Đánh Giá", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
@@ -232,7 +198,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                 ),
               ),
             ),
-            // 5. Nút Hỗ trợ
+            // 5. Nút Chat với Admin
             Container(
               padding: const EdgeInsets.all(24),
               decoration: const BoxDecoration(
@@ -243,9 +209,21 @@ class _StudentDashboardState extends State<StudentDashboard> {
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton.icon(
-                  onPressed: _showSupportDialog,
-                  icon: const Icon(Icons.support_agent_rounded, color: Colors.white),
-                  label: const Text("GỬI YÊU CẦU HỖ TRỢ", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1)),
+                  onPressed: () async {
+                    // Lấy hoặc tạo chatId cho học viên
+                    var chatQuery = await _db.collection('chats').where('studentId', isEqualTo: _studentUid).get();
+                    String chatId;
+                    if (chatQuery.docs.isEmpty) {
+                      var newChat = await _db.collection('chats').add({'studentId': _studentUid, 'studentName': _studentData!['name']});
+                      chatId = newChat.id;
+                    } else {
+                      chatId = chatQuery.docs.first.id;
+                    }
+                    if (!context.mounted) return;
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => ChatScreen(chatId: chatId, otherUserName: "Admin")));
+                  },
+                  icon: const Icon(Icons.chat_bubble_rounded, color: Colors.white),
+                  label: const Text("CHAT VỚI ADMIN", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.amber.shade500,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -389,4 +367,3 @@ class _StudentDashboardState extends State<StudentDashboard> {
     );
   }
 }
-

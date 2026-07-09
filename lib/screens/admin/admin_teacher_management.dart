@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_core/firebase_core.dart' hide FirebaseService;
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/firebase_service.dart';
 
@@ -48,9 +48,11 @@ class _AdminTeacherManagementState extends State<AdminTeacherManagement> {
                   'uid': res.user!.uid, 'name': nameC.text, 'email': emailC.text,
                   'role': 'teacher', 'updatedAt': FieldValue.serverTimestamp(),
                 });
-                if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Thêm giáo viên thành công!")));
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Thêm giáo viên thành công!")));
               } catch (e) {
-                if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Lỗi: $e")));
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Lỗi: $e")));
               } finally {
                 await tempApp?.delete();
                 if (mounted) setState(() => _isLoading = false);

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/auth_service.dart';
 import 'admin_teacher_management.dart';
 import 'admin_student_management.dart';
 import 'admin_class_management.dart';
-import 'admin_support_inbox.dart';
+import 'admin_schedule_management.dart';
+import 'admin_tuition_management.dart';
+import 'admin_chat_list_screen.dart';
 import '../../widgets/admin_drawer.dart';
 
 class AdminDashboard extends StatelessWidget {
@@ -109,7 +110,9 @@ class AdminDashboard extends StatelessWidget {
                 _buildBentoCard(context, "Giáo Viên", Icons.person_search_rounded, const Color(0xFFF59E0B), db.collection('users').where('role', isEqualTo: 'teacher').snapshots(), const AdminTeacherManagement()),
                 _buildBentoCard(context, "Học Viên", Icons.groups_rounded, const Color(0xFF3B82F6), db.collection('users').where('role', isEqualTo: 'student').snapshots(), const AdminStudentManagement()),
                 _buildBentoCard(context, "Lớp Học", Icons.class_rounded, const Color(0xFF10B981), db.collection('classes').snapshots(), const AdminClassManagement()),
-                _buildBentoCard(context, "Thông Báo", Icons.notifications_active_rounded, const Color(0xFFEF4444), db.collection('supportTickets').where('status', isEqualTo: 'Chưa đọc').snapshots(), const AdminSupportInbox()),
+                _buildBentoCard(context, "Thời khóa biểu", Icons.calendar_today_rounded, const Color(0xFF8B5CF6), db.collection('schedules').snapshots(), const AdminScheduleManagement()),
+                _buildBentoCard(context, "Học phí", Icons.payments_rounded, const Color(0xFFF59E0B), db.collection('tuition').snapshots(), const AdminTuitionManagement()),
+                _buildBentoCard(context, "Chat Phụ huynh", Icons.chat_rounded, const Color(0xFFEF4444), db.collection('chats').snapshots(), const AdminChatListScreen()),
               ]),
             ),
           )

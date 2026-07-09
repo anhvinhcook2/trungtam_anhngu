@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_core/firebase_core.dart' hide FirebaseService;
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/firebase_service.dart';
+import 'student_progression_screen.dart';
 
 class AdminStudentManagement extends StatefulWidget {
   const AdminStudentManagement({super.key});
@@ -58,7 +59,8 @@ class _AdminStudentManagementState extends State<AdminStudentManagement> {
                     'role': 'student', 'studentCode': sCode, 'tuitionStatus': 'Chưa đóng',
                     'updatedAt': FieldValue.serverTimestamp()
                   });
-                  if (context.mounted) Navigator.pop(context);
+                  if (!context.mounted) return;
+                  Navigator.pop(context);
                 } finally {
                   await tempApp?.delete();
                   if (mounted) setState(() => _isProcessing = false);
@@ -188,6 +190,12 @@ class _AdminStudentManagementState extends State<AdminStudentManagement> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
+                        TextButton.icon(
+                          onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => StudentProgressionScreen(studentId: doc.id, studentName: doc['name']))),
+                          icon: const Icon(Icons.timeline_rounded, size: 18),
+                          label: const Text("Lộ trình"),
+                          style: TextButton.styleFrom(foregroundColor: Colors.teal),
+                        ),
                         TextButton.icon(
                           onPressed: () => _showEditDialog(doc.id, doc['name']),
                           icon: const Icon(Icons.edit_rounded, size: 18),

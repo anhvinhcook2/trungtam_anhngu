@@ -5,6 +5,8 @@ import '../screens/admin/admin_dashboard.dart';
 import '../screens/admin/admin_teacher_management.dart';
 import '../screens/admin/admin_student_management.dart';
 import '../screens/admin/admin_class_management.dart';
+import '../screens/admin/admin_schedule_management.dart';
+import '../screens/admin/admin_tuition_management.dart';
 import '../screens/admin/admin_support_inbox.dart';
 
 class AdminDrawer extends StatelessWidget {
@@ -45,6 +47,8 @@ class AdminDrawer extends StatelessWidget {
                 _buildMenuItem(context, "Quản lý Giáo viên", Icons.person_search_rounded, const AdminTeacherManagement()),
                 _buildMenuItem(context, "Quản lý Học viên", Icons.groups_rounded, const AdminStudentManagement()),
                 _buildMenuItem(context, "Quản lý Lớp học", Icons.class_rounded, const AdminClassManagement()),
+                _buildMenuItem(context, "Quản lý TKB", Icons.calendar_today_rounded, const AdminScheduleManagement()),
+                _buildMenuItem(context, "Quản lý Học phí", Icons.payments_rounded, const AdminTuitionManagement()),
                 _buildMenuItem(context, "Hỗ trợ & Phản hồi", Icons.support_agent_rounded, const AdminSupportInbox()),
               ],
             ),
