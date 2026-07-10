@@ -56,7 +56,7 @@ class _AdminStudentManagementState extends State<AdminStudentManagement> {
                   String sCode = _fs.generateStudentCode();
                   await _db.collection('users').doc(res.user!.uid).set({
                     'uid': res.user!.uid, 'email': emailC.text, 'name': nameC.text, 
-                    'role': 'student', 'studentCode': sCode, 'tuitionStatus': 'Chưa đóng',
+                    'role': 'student', 'student_code': sCode, 'tuition_status': 'Chưa đóng',
                     'updatedAt': FieldValue.serverTimestamp()
                   });
                   if (!context.mounted) return;
@@ -140,7 +140,6 @@ class _AdminStudentManagementState extends State<AdminStudentManagement> {
             itemCount: snapshot.data!.docs.length,
             itemBuilder: (context, index) {
               var doc = snapshot.data!.docs[index];
-              bool isPaid = doc['tuitionStatus'] == 'Đã đóng';
               return Container(
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
@@ -162,28 +161,13 @@ class _AdminStudentManagementState extends State<AdminStudentManagement> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const SizedBox(height: 4),
-                          Text(doc['studentCode'] ?? "Chưa cấp mã", style: const TextStyle(color: Color(0xFF4F46E5), fontWeight: FontWeight.bold)),
+                          Text(doc['student_code'] ?? doc['studentCode'] ?? "Chưa cấp mã", style: const TextStyle(color: Color(0xFF4F46E5), fontWeight: FontWeight.bold)),
                           Text(doc['email'], style: const TextStyle(color: Color(0xFF64748B), fontSize: 13)),
                         ],
                       ),
-                      trailing: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Transform.scale(
-                            scale: 0.8,
-                            child: Switch(
-                              value: isPaid,
-                              activeThumbColor: const Color(0xFF16A34A),
-                              activeTrackColor: const Color(0xFFF0FDF4),
-                              inactiveThumbColor: const Color(0xFFDC2626),
-                              inactiveTrackColor: const Color(0xFFFEF2F2),
-                              onChanged: (val) async {
-                                await _db.collection('users').doc(doc.id).update({'tuitionStatus': val ? 'Đã đóng' : 'Chưa đóng'});
-                              },
-                            ),
-                          ),
-                          Text(isPaid ? "ĐÃ ĐÓNG" : "NỢ PHÍ", style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: isPaid ? const Color(0xFF16A34A) : const Color(0xFFDC2626))),
-                        ],
+                      trailing: SizedBox(
+                        width: 100,
+                        child: _buildStudentDebtSummary(doc.id),
                       ),
                     ),
                     const Divider(height: 0),
@@ -225,6 +209,23 @@ class _AdminStudentManagementState extends State<AdminStudentManagement> {
         label: const Text("THÊM HỌC VIÊN", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
+    );
+  }
+
+  Widget _buildStudentDebtSummary(String studentId) {
+    String month = DateTime.now().toString().substring(0, 7);
+    return StreamBuilder<QuerySnapshot>(
+      stream: _db.collection('tuition')
+          .where('studentId', isEqualTo: studentId)
+          .where('month', isEqualTo: month)
+          .where('status', isEqualTo: 'pending')
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return const Text("Đã đóng", style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold));
+        }
+        return Text("Nợ ${snapshot.data!.docs.length} môn", style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold));
+      },
     );
   }
 }

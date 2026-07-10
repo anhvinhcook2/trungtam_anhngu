@@ -36,10 +36,24 @@ exports.deleteUserAccount = functions.https.onCall(async (data, context) => {
 
     // 4. Xóa thông tin trong Cloud Firestore
     await admin.firestore().collection("users").doc(targetUid).delete();
+    
+    // 5. Xóa ID học sinh khỏi tất cả các lớp học
+    const classesSnapshot = await admin.firestore()
+        .collection("classes")
+        .where("studentIds", "array-contains", targetUid)
+        .get();
+
+    const batch = admin.firestore().batch();
+    classesSnapshot.docs.forEach((doc) => {
+      batch.update(doc.ref, {
+        studentIds: admin.firestore.FieldValue.arrayRemove(targetUid),
+      });
+    });
+    await batch.commit();
 
     return {
       success: true,
-      message: `Đã xóa thành công người dùng!`,
+      message: `Đã xóa thành công người dùng và cập nhật các lớp học!`,
     };
   } catch (error) {
     console.error("Lỗi khi xóa:", error);

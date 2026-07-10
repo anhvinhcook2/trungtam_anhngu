@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../utils/app_theme.dart';
 
 class EvaluationFormScreen extends StatefulWidget {
   final String studentId;
@@ -44,11 +45,11 @@ class _EvaluationFormScreenState extends State<EvaluationFormScreen> {
   Future<void> _saveEvaluation() async {
     double? score = double.tryParse(_scoreController.text);
     if (score == null || score < 0 || score > 10) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Vui lòng nhập điểm hợp lệ (0-10)")));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Vui lòng nhập điểm hợp lệ (0-10)"), backgroundColor: Colors.redAccent, behavior: SnackBarBehavior.floating));
       return;
     }
     if (_commentController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Vui lòng nhập nhận xét chi tiết")));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Vui lòng nhập nhận xét chi tiết"), backgroundColor: Colors.redAccent, behavior: SnackBarBehavior.floating));
       return;
     }
 
@@ -68,21 +69,19 @@ class _EvaluationFormScreenState extends State<EvaluationFormScreen> {
       };
 
       if (widget.reportId == null) {
-        // Create new
         data['timestamp'] = FieldValue.serverTimestamp();
         await _db.collection('reports').add(data);
       } else {
-        // Update existing
         await _db.collection('reports').doc(widget.reportId).update(data);
       }
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Đã lưu đánh giá!"), backgroundColor: Colors.green));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Đã lưu đánh giá!"), backgroundColor: Colors.green, behavior: SnackBarBehavior.floating));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Lỗi: $e"), backgroundColor: Colors.red));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Lỗi: $e"), backgroundColor: Colors.redAccent, behavior: SnackBarBehavior.floating));
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -94,18 +93,19 @@ class _EvaluationFormScreenState extends State<EvaluationFormScreen> {
     bool isEdit = widget.reportId != null;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFFFDF5),
+      backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
-        title: Text(isEdit ? "Sửa Đánh Giá" : "Đánh Giá Định Kỳ", style: const TextStyle(color: Colors.brown)),
-        backgroundColor: Colors.amber.shade300,
-        iconTheme: const IconThemeData(color: Colors.brown),
+        title: Text(isEdit ? "Sửa Đánh Giá" : "Đánh Giá Định Kỳ", style: const TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: AppTheme.textPrimary),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text("Điểm số (0 - 10)", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.brown)),
+            const Text("Điểm số (0 - 10)", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.textPrimary)),
             const SizedBox(height: 8),
             TextField(
               controller: _scoreController,
@@ -114,21 +114,19 @@ class _EvaluationFormScreenState extends State<EvaluationFormScreen> {
                 hintText: "VD: 8.5",
                 filled: true,
                 fillColor: Colors.white,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Colors.amber.shade200)),
-                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Colors.amber.shade200)),
-                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Colors.amber.shade600, width: 2)),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppTheme.primaryColor, width: 2)),
               ),
             ),
             const SizedBox(height: 24),
             
-            const Text("Thái độ học tập", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.brown)),
+            const Text("Thái độ học tập", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.textPrimary)),
             const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.amber.shade200),
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
@@ -147,33 +145,36 @@ class _EvaluationFormScreenState extends State<EvaluationFormScreen> {
               ),
             ),
             const SizedBox(height: 24),
-
-            const Text("Nhận xét chi tiết", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.brown)),
+            
+            const Text("Nhận xét chi tiết", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.textPrimary)),
             const SizedBox(height: 8),
             TextField(
               controller: _commentController,
               maxLines: 5,
               maxLength: 500,
               decoration: InputDecoration(
-                hintText: "Điểm mạnh, điểm yếu, cần cố gắng phần nào...",
+                hintText: "Điểm mạnh, điểm yếu...",
                 filled: true,
                 fillColor: Colors.white,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Colors.amber.shade200)),
-                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Colors.amber.shade200)),
-                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Colors.amber.shade600, width: 2)),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppTheme.primaryColor, width: 2)),
               ),
             ),
             const SizedBox(height: 40),
 
-            SizedBox(
+            Container(
               width: double.infinity,
               height: 56,
+              decoration: BoxDecoration(
+                gradient: AppTheme.primaryGradient,
+                borderRadius: BorderRadius.circular(16),
+              ),
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.amber.shade600,
+                  backgroundColor: Colors.transparent,
                   foregroundColor: Colors.white,
+                  shadowColor: Colors.transparent,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  elevation: 2,
                 ),
                 onPressed: _isSaving ? null : _saveEvaluation,
                 child: _isSaving 

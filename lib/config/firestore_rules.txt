@@ -1,88 +1,63 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Hàm kiểm tra vai trò người dùng
     function getRole() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
     }
 
     // 1. COLLECTION: USERS
     match /users/{userId} {
-      // Admin: Toàn quyền
       allow read, write: if request.auth != null && getRole() == 'admin';
-      
-      // Người dùng: Đọc thông tin cá nhân
-      allow read: if request.auth != null && request.auth.uid == userId;
-      
-      // Public: Cho phép tìm kiếm qua studentCode
-      allow list: if request.query.limit <= 10 && (request.query.filters.size() > 0);
-      allow get: if resource.data.role == 'student';
+      allow read: if request.auth != null && getRole() == 'teacher';
+      allow get: if request.auth != null && request.auth.uid == userId;
+
+      // CHO PHÉP TÌM KIẾM HỌC VIÊN BẰNG STUDENT_CODE
+      allow list: if request.query.limit <= 10;
     }
 
     // 2. COLLECTION: CLASSES
     match /classes/{classId} {
       allow read, write: if request.auth != null && getRole() == 'admin';
-      
-      // Giáo viên: Chỉ xem lớp mình phụ trách
       allow read: if request.auth != null && 
-                  getRole() == 'teacher' && 
-                  resource.data.teacherId == request.auth.uid;
-                          
-      // Học viên: Xem lớp mình tham gia
-      allow read: if request.auth != null && 
-                  getRole() == 'student' && 
-                  request.auth.uid in resource.data.studentIds;
+                  (getRole() == 'teacher' && resource.data.teacherId == request.auth.uid) ||
+                  (getRole() == 'student' && request.auth.uid in resource.data.studentIds);
     }
 
-    // 3. COLLECTION: SCHEDULES (MỚI)
+    // 3. COLLECTION: SCHEDULES
     match /schedules/{scheduleId} {
       allow read: if request.auth != null;
       allow write: if request.auth != null && getRole() == 'admin';
     }
 
-    // 4. COLLECTION: ATTENDANCE (MỚI)
+    // 4. COLLECTION: ATTENDANCE
     match /attendance/{attendanceId} {
       allow read: if request.auth != null && getRole() == 'admin';
-      
-      // Giáo viên: Đọc và viết điểm danh cho lớp mình dạy
-      allow read, write: if request.auth != null && 
-                          getRole() == 'teacher' && 
-                          get(/databases/$(database)/documents/classes/$(resource.data.classId)).data.teacherId == request.auth.uid;
+      allow read, write: if request.auth != null && getRole() == 'teacher';
     }
 
-    // 5. COLLECTION: TUITION (MỚI)
+    // 5. COLLECTION: TUITION
     match /tuition/{tuitionId} {
       allow read, write: if request.auth != null && getRole() == 'admin';
       allow read: if request.auth != null && resource.data.studentId == request.auth.uid;
     }
 
-    // 6. COLLECTION: CHATS (MỚI - THAY THẾ SUPPORT TICKETS)
+    // 6. COLLECTION: CHATS
     match /chats/{chatId} {
-      allow read: if request.auth != null && 
-                  (resource.data.studentId == request.auth.uid || getRole() == 'admin');
-      
+      allow read: if request.auth != null && (resource.data.studentId == request.auth.uid || getRole() == 'admin');
+      // Cho phép học sinh tạo chat với chính UID của mình
+      allow create: if request.auth != null && request.resource.data.studentId == request.auth.uid;
       match /messages/{messageId} {
-        allow read, write: if request.auth != null && 
-                            (get(/databases/$(database)/documents/chats/$(chatId)).data.studentId == request.auth.uid || 
-                             getRole() == 'admin');
+        allow read, write: if request.auth != null;
       }
     }
 
     // 7. COLLECTION: REPORTS
     match /reports/{reportId} {
       allow read, write: if request.auth != null && getRole() == 'admin';
-      
-      // Giáo viên: Tạo và quản lý báo cáo của mình
       allow create: if request.auth != null && getRole() == 'teacher';
-      allow read, update: if request.auth != null && 
-                          getRole() == 'teacher' && 
-                          resource.data.teacher_id == request.auth.uid;
-      
-      // Học viên/Phụ huynh: Đọc báo cáo của chính mình
-      allow read: if (request.auth != null && resource.data.student_id == request.auth.uid) ||
-                  (resource.data.type == 'periodic'); 
+      // Cho phép giáo viên đọc/cập nhật, hoặc học sinh đọc báo cáo của chính mình
+      allow read, update: if request.auth != null && (getRole() == 'teacher' || (getRole() == 'student' && resource.data.student_id == request.auth.uid));
     }
   }
 }

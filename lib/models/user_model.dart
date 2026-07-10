@@ -1,10 +1,12 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class UserModel {
   final String uid;
   final String email;
   final String name;
   final String role; // admin, teacher, student
-  final String? studentCode; // HV-YYYY-NNNNN
-  final String? tuitionStatus; // Đã đóng | Chưa đóng
+  final String? studentCode; // Giữ lại property này cho Flutter Code
+  final String? tuitionStatus; // Giữ lại property này cho Flutter Code
 
   UserModel({
     required this.uid,
@@ -15,28 +17,28 @@ class UserModel {
     this.tuitionStatus = 'Chưa đóng',
   });
 
-  // Chuyển dữ liệu từ Firestore về Model với xử lý null-safe
+  // Chuyển dữ liệu từ Firestore về Model với chuẩn snake_case từ DB
   factory UserModel.fromMap(Map<String, dynamic> data) {
     return UserModel(
       uid: data['uid'] ?? '',
       email: data['email'] ?? '',
       name: data['name'] ?? '',
       role: data['role'] ?? 'student',
-      studentCode: data['studentCode'] ?? data['student_code'],
-      tuitionStatus: data['tuitionStatus'] ?? data['tuition_status'] ?? 'Chưa đóng',
+      studentCode: data['student_code'] ?? data['studentCode'],
+      tuitionStatus: data['tuition_status'] ?? data['tuitionStatus'] ?? 'Chưa đóng',
     );
   }
 
-  // Chuyển Model thành Map để lưu lên Firestore
+  // Chuyển Model thành Map để lưu lên Firestore theo chuẩn snake_case
   Map<String, dynamic> toMap() {
     return {
       'uid': uid,
       'email': email,
       'name': name,
       'role': role,
-      'studentCode': studentCode,
-      'tuitionStatus': tuitionStatus,
-      'updatedAt': DateTime.now().millisecondsSinceEpoch,
+      'student_code': studentCode,
+      'tuition_status': tuitionStatus,
+      'updated_at': FieldValue.serverTimestamp(),
     };
   }
 

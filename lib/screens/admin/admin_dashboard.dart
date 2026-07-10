@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../services/auth_service.dart';
+import '../auth_screen.dart';
 import 'admin_teacher_management.dart';
 import 'admin_student_management.dart';
 import 'admin_class_management.dart';
@@ -32,6 +33,13 @@ class AdminDashboard extends StatelessWidget {
 
     if (confirm) {
       await AuthService().logout();
+      if (context.mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const AuthScreen()),
+          (route) => false,
+        );
+      }
     }
   }
 
@@ -40,7 +48,8 @@ class AdminDashboard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [BoxShadow(color: Colors.black.withAlpha(8), blurRadius: 15, offset: const Offset(0, 5))],
+        border: Border.all(color: color.withAlpha(50), width: 1.5),
+        boxShadow: [BoxShadow(color: color.withAlpha(20), blurRadius: 10, offset: const Offset(0, 4))],
       ),
       child: InkWell(
         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => screen)),
@@ -51,7 +60,7 @@ class AdminDashboard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               CircleAvatar(
-                backgroundColor: color.withAlpha(30),
+                backgroundColor: color.withAlpha(20),
                 radius: 24,
                 child: Icon(icon, color: color, size: 28),
               ),
@@ -63,7 +72,7 @@ class AdminDashboard extends StatelessWidget {
                   return Text("$count", style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: color));
                 },
               ),
-              Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF1E293B))),
+              Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF1E293B))),
             ],
           ),
         ),
@@ -82,12 +91,12 @@ class AdminDashboard extends StatelessWidget {
             expandedHeight: 200,
             pinned: true,
             flexibleSpace: FlexibleSpaceBar(
-              title: const Text("QUẢN TRỊ VIÊN", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 2, color: Colors.white)),
+              title: const Text("Admin System", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 2, color: Colors.black45)),
               background: Stack(
                 children: [
                   Container(
                     decoration: const BoxDecoration(
-                      gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF4F46E5), Color(0xFF312E81)]),
+                      gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF4F46E5), Color(0xFFDBF8FD)]),
                     ),
                   ),
                   Positioned(top: -20, right: -20, child: CircleAvatar(radius: 80, backgroundColor: Colors.white.withAlpha(20))),
@@ -111,8 +120,8 @@ class AdminDashboard extends StatelessWidget {
                 _buildBentoCard(context, "Học Viên", Icons.groups_rounded, const Color(0xFF3B82F6), db.collection('users').where('role', isEqualTo: 'student').snapshots(), const AdminStudentManagement()),
                 _buildBentoCard(context, "Lớp Học", Icons.class_rounded, const Color(0xFF10B981), db.collection('classes').snapshots(), const AdminClassManagement()),
                 _buildBentoCard(context, "Thời khóa biểu", Icons.calendar_today_rounded, const Color(0xFF8B5CF6), db.collection('schedules').snapshots(), const AdminScheduleManagement()),
-                _buildBentoCard(context, "Học phí", Icons.payments_rounded, const Color(0xFFF59E0B), db.collection('tuition').snapshots(), const AdminTuitionManagement()),
-                _buildBentoCard(context, "Chat Phụ huynh", Icons.chat_rounded, const Color(0xFFEF4444), db.collection('chats').snapshots(), const AdminChatListScreen()),
+                _buildBentoCard(context, "Học phí", Icons.payments_rounded, const Color(0xFF16537E), db.collection('tuition').snapshots(), const AdminTuitionManagement()),
+                _buildBentoCard(context, "Tin nhắn", Icons.chat_rounded, const Color(0xFFEF4444), db.collection('chats').snapshots(), const AdminChatListScreen()),
               ]),
             ),
           )

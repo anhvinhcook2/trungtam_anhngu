@@ -18,6 +18,7 @@ class _AdminTuitionManagementState extends State<AdminTuitionManagement> {
       appBar: AppBar(title: const Text("Quản lý học phí")),
       body: Column(
         children: [
+          // 1. Dropdown chọn lớp
           StreamBuilder<QuerySnapshot>(
             stream: _db.collection('classes').snapshots(),
             builder: (context, snapshot) {
@@ -31,6 +32,8 @@ class _AdminTuitionManagementState extends State<AdminTuitionManagement> {
               );
             },
           ),
+
+          // 2. Danh sách học viên và trạng thái học phí
           if (_selectedClassId != null)
             Expanded(
               child: StreamBuilder<DocumentSnapshot>(
@@ -39,10 +42,10 @@ class _AdminTuitionManagementState extends State<AdminTuitionManagement> {
                   if (!snapshot.hasData) return const CircularProgressIndicator();
                   var doc = snapshot.data!;
                   if (!doc.exists) return const Text("Lớp không tồn tại");
-                  
+
                   var data = doc.data() as Map<String, dynamic>;
                   List<String> studentIds = List<String>.from(data['studentIds'] ?? []);
-                  
+
                   if (studentIds.isEmpty) return const Text("Lớp chưa có học viên");
 
                   return FutureBuilder<QuerySnapshot>(
@@ -50,16 +53,42 @@ class _AdminTuitionManagementState extends State<AdminTuitionManagement> {
                     builder: (context, studentSnapshot) {
                       if (!studentSnapshot.hasData) return const CircularProgressIndicator();
                       var students = studentSnapshot.data!.docs;
+
                       return ListView.builder(
                         itemCount: students.length,
                         itemBuilder: (context, i) {
                           var s = students[i];
-                          return ListTile(
-                            title: Text(s['name']),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.payment),
-                              onPressed: () => _updateTuition(s.id, _selectedClassId!),
-                            ),
+                          String studentId = s.id;
+                          String month = DateTime.now().toString().substring(0, 7);
+
+                          // StreamBuilder lồng để cập nhật trạng thái học phí thời gian thực
+                          return StreamBuilder<QuerySnapshot>(
+                            stream: _db.collection('tuition')
+                                .where('studentId', isEqualTo: studentId)
+                                .where('classId', isEqualTo: _selectedClassId)
+                                .where('month', isEqualTo: month)
+                                .snapshots(),
+                            builder: (context, tuitionSnap) {
+                              bool isPaid = false;
+                              if (tuitionSnap.hasData && tuitionSnap.data!.docs.isNotEmpty) {
+                                isPaid = tuitionSnap.data!.docs.first['status'] == 'paid';
+                              }
+
+                              return ListTile(
+                                title: Text(s['name']),
+                                subtitle: Text(
+                                  isPaid ? "Đã đóng tháng $month" : "Chưa đóng học phí",
+                                  style: TextStyle(color: isPaid ? Colors.green : Colors.red),
+                                ),
+                                trailing: IconButton(
+                                  icon: Icon(
+                                    isPaid ? Icons.check_circle : Icons.radio_button_unchecked,
+                                    color: isPaid ? Colors.green : Colors.grey,
+                                  ),
+                                  onPressed: () => _updateTuition(studentId, _selectedClassId!),
+                                ),
+                              );
+                            },
                           );
                         },
                       );
@@ -80,7 +109,7 @@ class _AdminTuitionManagementState extends State<AdminTuitionManagement> {
         .where('classId', isEqualTo: classId)
         .where('month', isEqualTo: month)
         .get();
-    
+
     if (doc.docs.isEmpty) {
       await _db.collection('tuition').add({
         'studentId': studentId,
