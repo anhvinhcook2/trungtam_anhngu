@@ -9,24 +9,44 @@ import '../screens/admin/admin_student_management.dart';
 import '../screens/admin/admin_class_management.dart';
 import '../screens/admin/admin_schedule_management.dart';
 import '../screens/admin/admin_tuition_management.dart';
-import '../screens/admin/admin_support_inbox.dart';
+import '../screens/admin/admin_support_inbox.dart'; // Tuỳ bạn có thêm vào menu không
 
 class AdminDrawer extends StatelessWidget {
   const AdminDrawer({super.key});
+
+  // --- BẢNG MÀU CHUẨN CONCEPT ORGANIC TECH ---
+  final Color _primaryColor = const Color(0xFF004D40); // Deep Jungle Green
+  final Color _bgColor = const Color(0xFFF8F9FA); // Light Grey
+  final String _fontFamily = 'Nunito';
 
   Future<void> _logout(BuildContext context) async {
     bool confirm = await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Xác nhận"),
-        content: const Text("Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?"),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)), // Bo góc chuẩn 24px
+        title: Text(
+          "Xác nhận", 
+          style: TextStyle(fontFamily: _fontFamily, fontWeight: FontWeight.bold, color: Colors.black87),
+        ),
+        content: Text(
+          "Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?",
+          style: TextStyle(fontFamily: _fontFamily, color: Colors.grey[700]),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Hủy")),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false), 
+            child: Text("Hủy", style: TextStyle(fontFamily: _fontFamily, color: Colors.grey[600], fontWeight: FontWeight.bold)),
+          ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red.shade400, 
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text("Đăng xuất"),
+            child: Text("Đăng xuất", style: TextStyle(fontFamily: _fontFamily, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -50,27 +70,65 @@ class AdminDrawer extends StatelessWidget {
       backgroundColor: Colors.white,
       child: Column(
         children: [
-          UserAccountsDrawerHeader(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [AppTheme.primaryColor, Color(0xFFDBF8FD)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+          // Custom Header mang hơi hướng Organic (Bo tròn góc dưới)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.only(top: 60, bottom: 24, left: 24, right: 24),
+            decoration: BoxDecoration(
+              color: _primaryColor,
+              borderRadius: const BorderRadius.only(
+                bottomRight: Radius.circular(40), // Tạo đường cong tự nhiên
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: _primaryColor.withOpacity(0.3),
+                  blurRadius: 15,
+                  offset: const Offset(0, 5),
+                )
+              ],
             ),
-            currentAccountPicture: const CircleAvatar(
-              backgroundColor: Colors.white24,
-              child: Icon(Icons.admin_panel_settings_rounded, size: 40, color: Colors.white),
-            ),
-            accountName: const Text(
-              "Admin System",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-            ),
-            accountEmail: Text(
-              FirebaseAuth.instance.currentUser?.email ?? "admin@trungtam.com",
-              style: TextStyle(color: Colors.white.withAlpha(204)), // 0.8 * 255 ≈ 204
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const CircleAvatar(
+                    radius: 32,
+                    backgroundColor: Colors.white,
+                    child: Icon(Icons.admin_panel_settings_rounded, size: 36, color: Color(0xFF004D40)),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  "Admin System",
+                  style: TextStyle(
+                    fontFamily: _fontFamily,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 20,
+                    color: Colors.white,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  FirebaseAuth.instance.currentUser?.email ?? "admin@trungtam.com",
+                  style: TextStyle(
+                    fontFamily: _fontFamily,
+                    color: Colors.white.withOpacity(0.8),
+                    fontSize: 14,
+                  ),
+                ),
+              ],
             ),
           ),
+          
+          const SizedBox(height: 16),
+          
+          // Danh sách menu
           Expanded(
             child: ListView(
               padding: EdgeInsets.zero,
@@ -84,26 +142,68 @@ class AdminDrawer extends StatelessWidget {
               ],
             ),
           ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.logout_rounded, color: Colors.redAccent),
-            title: const Text("Đăng xuất", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
-            onTap: () => _logout(context),
+          
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 24),
+            child: Divider(height: 1, color: Color(0xFFE2E8F0)),
           ),
-          const SizedBox(height: 20),
+          
+          // Nút Đăng xuất ở dưới cùng
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: ListTile(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), // Bo góc 16px khi hover/nhấn
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(Icons.logout_rounded, color: Colors.red.shade400, size: 22),
+              ),
+              title: Text(
+                "Đăng xuất", 
+                style: TextStyle(fontFamily: _fontFamily, color: Colors.red.shade600, fontWeight: FontWeight.w700, fontSize: 15),
+              ),
+              onTap: () => _logout(context),
+            ),
+          ),
+          const SizedBox(height: 12),
         ],
       ),
     );
   }
 
+  // Hàm build từng item của menu
   Widget _buildMenuItem(BuildContext context, String title, IconData icon, Widget screen) {
-    return ListTile(
-      leading: Icon(icon, color: AppTheme.primaryColor),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-      onTap: () {
-        Navigator.pop(context); // Đóng drawer
-        Navigator.push(context, MaterialPageRoute(builder: (context) => screen));
-      },
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: ListTile(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), // Bo góc 16px chuẩn concept
+        hoverColor: _bgColor,
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: _primaryColor.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, color: _primaryColor, size: 22),
+        ),
+        title: Text(
+          title, 
+          style: TextStyle(
+            fontFamily: _fontFamily, 
+            fontWeight: FontWeight.w700, 
+            fontSize: 15,
+            color: Colors.black87,
+          ),
+        ),
+        onTap: () {
+          Navigator.pop(context); // Đóng drawer
+          // Chuyển trang
+          Navigator.push(context, MaterialPageRoute(builder: (context) => screen));
+        },
+      ),
     );
   }
 }
