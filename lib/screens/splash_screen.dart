@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../utils/app_theme.dart';
+import '../utils/app_theme.dart'; // Bạn có thể giữ để dùng các config khác nếu cần
 import '../navigation/auth_wrapper.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -13,6 +13,11 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
+
+  // --- BẢNG MÀU CHUẨN CONCEPT ORGANIC TECH ---
+  final Color _primaryColor = const Color(0xFF004D40); // Deep Jungle Green
+  final Color _bgColor = const Color(0xFFF8F9FA); // Light Grey
+  final String _fontFamily = 'Nunito';
 
   @override
   void initState() {
@@ -59,15 +64,9 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
+      backgroundColor: _bgColor, // Nền xám nhạt đồng bộ concept
+      body: SizedBox(
         width: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFFEEF2FF), Color(0xFFF8FAFC)],
-          ),
-        ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -83,14 +82,14 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                 );
               },
               child: Container(
-                width: 160,
-                height: 160,
+                width: 140, // Kích thước tinh chỉnh lại gọn gàng hơn
+                height: 140,
                 decoration: BoxDecoration(
                   color: Colors.white,
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: AppTheme.primaryColor.withAlpha(51),
+                      color: Colors.black.withOpacity(0.05), // Bóng đổ cực mờ (soft shadow)
                       blurRadius: 30,
                       offset: const Offset(0, 10),
                     )
@@ -102,12 +101,13 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                   'assets/logo.png',
                   fit: BoxFit.contain,
                   errorBuilder: (context, error, stackTrace) {
-                    return const Icon(Icons.school_rounded, size: 80, color: AppTheme.primaryColor);
+                    return Icon(Icons.school_rounded, size: 70, color: _primaryColor);
                   },
                 ),
               ),
             ),
-            const SizedBox(height: 40),
+            const SizedBox(height: 36),
+            
             AnimatedBuilder(
               animation: _controller,
               builder: (context, child) {
@@ -116,23 +116,26 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                   child: child,
                 );
               },
-              child: const Column(
+              child: Column(
                 children: [
                   Text(
                     "ENGLISH CENTER",
                     style: TextStyle(
+                      fontFamily: _fontFamily,
                       fontSize: 32,
                       fontWeight: FontWeight.w900,
-                      color: Color(0xFF1E1B4B),
+                      color: _primaryColor, // Đổi sang Deep Jungle Green
                       letterSpacing: 2,
                     ),
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Text(
                     "Enterprise Management System",
                     style: TextStyle(
-                      fontSize: 16,
-                      color: Color(0xFF64748B),
+                      fontFamily: _fontFamily,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700, // Đậm nhẹ để dễ đọc
+                      color: Colors.grey[500],
                       letterSpacing: 1.2,
                     ),
                   ),
@@ -140,7 +143,12 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
               ),
             ),
             const SizedBox(height: 60),
-            const CircularProgressIndicator(color: AppTheme.primaryColor),
+            
+            // Loading Indicator dùng màu chủ đạo
+            CircularProgressIndicator(
+              color: _primaryColor,
+              strokeWidth: 3,
+            ),
           ],
         ),
       ),

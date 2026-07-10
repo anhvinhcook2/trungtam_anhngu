@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../utils/app_theme.dart';
+import '../utils/app_theme.dart'; // Vẫn giữ nguyên import của bạn
 import 'admin/admin_dashboard.dart';
 import 'teacher_dashboard.dart';
 import 'student_dashboard.dart';
@@ -20,6 +20,12 @@ class _AuthScreenState extends State<AuthScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+
+  // --- BẢNG MÀU CHUẨN CONCEPT ---
+  final Color _primaryColor = const Color(0xFF004D40); // Deep Jungle Green
+  final Color _bgColor = const Color(0xFFF8F9FA); // Light Grey
+  final Color _accentColor = const Color(0xFFF59E0B); // Vàng nghệ / Cam nhạt cho CTA
+  final String _fontFamily = 'Nunito'; // Font chữ bo tròn, thân thiện
 
   Future<void> _login() async {
     if (_emailController.text.trim().isEmpty || _passwordController.text.trim().isEmpty) {
@@ -105,204 +111,184 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFFEEF2FF), Color(0xFFE0E7FF), Color(0xFFF5F3FF)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 28.0, vertical: 20.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Logo Container with soft glowing card style
-                  Container(
-                    width: 130,
-                    height: 130,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppTheme.primaryColor.withAlpha(40),
-                          blurRadius: 25,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
-                    ),
-                    child: Image.asset(
-                      'assets/logo.png',
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) {
-                        return const Icon(Icons.school_rounded, size: 70, color: AppTheme.primaryColor);
-                      },
-                    ),
+      backgroundColor: _bgColor, // Chuyển sang Light Grey thay vì gradient
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Logo Container
+                Container(
+                  width: 110,
+                  height: 110,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05), // Bóng đổ mờ
+                        blurRadius: 20,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 24),
-                  
-                  const Text(
-                    "English For Life",
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w900,
-                      color: Color(0xFF1E1B4B),
-                      letterSpacing: 0.5,
-                    ),
+                  child: Image.asset(
+                    'assets/logo.png',
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Icon(Icons.school_rounded, size: 60, color: _primaryColor);
+                    },
                   ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    "HỆ THỐNG QUẢN LÝ ĐÀO TẠO",
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.textSecondary,
-                      letterSpacing: 1.5,
-                    ),
+                ),
+                const SizedBox(height: 24),
+                
+                Text(
+                  "English For Life",
+                  style: TextStyle(
+                    fontFamily: _fontFamily,
+                    fontSize: 28,
+                    fontWeight: FontWeight.w800,
+                    color: _primaryColor, // Đổi sang Deep Jungle Green
+                    letterSpacing: 0.5,
                   ),
-                  const SizedBox(height: 36),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "HỆ THỐNG QUẢN LÝ ĐÀO TẠO",
+                  style: TextStyle(
+                    fontFamily: _fontFamily,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.grey[600],
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 40),
 
-                  // Beautiful floating input card
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(28),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(32),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withAlpha(15),
-                          blurRadius: 30,
-                          offset: const Offset(0, 15),
+                // Card Container (Form đăng nhập) bo góc 16px
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16), // Bo góc 16px theo chuẩn
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.04), // Soft shadow
+                        blurRadius: 24,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Chào mừng quay trở lại!",
+                        style: TextStyle(
+                          fontFamily: _fontFamily,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.black87,
                         ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          "Chào mừng quay trở lại!",
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w800,
-                            color: AppTheme.textPrimary,
-                          ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        "Vui lòng đăng nhập tài khoản của bạn.",
+                        style: TextStyle(
+                          fontFamily: _fontFamily,
+                          fontSize: 14,
+                          color: Colors.grey[500],
                         ),
-                        const SizedBox(height: 4),
-                        const Text(
-                          "Vui lòng đăng nhập tài khoản của bạn.",
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: AppTheme.textSecondary,
-                          ),
-                        ),
-                        const SizedBox(height: 24),
+                      ),
+                      const SizedBox(height: 28),
 
-                        // Form Fields
-                        TextField(
-                          controller: _emailController,
-                          keyboardType: TextInputType.emailAddress,
-                          style: const TextStyle(color: AppTheme.textPrimary, fontSize: 15),
-                          decoration: InputDecoration(
-                            labelText: "Email đăng nhập",
-                            labelStyle: const TextStyle(fontSize: 14),
-                            prefixIcon: const Icon(Icons.email_outlined, color: AppTheme.primaryColor, size: 22),
-                            filled: true,
-                            fillColor: const Color(0xFFF8FAFC),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide.none,
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide.none,
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: const BorderSide(color: AppTheme.primaryColor, width: 1.5),
-                            ),
+                      // Email Field
+                      TextField(
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        style: TextStyle(fontFamily: _fontFamily, fontSize: 15, color: Colors.black87),
+                        decoration: InputDecoration(
+                          labelText: "Email đăng nhập",
+                          labelStyle: TextStyle(fontFamily: _fontFamily, fontSize: 14, color: Colors.grey[600]),
+                          prefixIcon: Icon(Icons.email_outlined, color: _primaryColor, size: 22),
+                          filled: true,
+                          fillColor: _bgColor, // Trùng với nền xám nhạt để tạo chiều sâu nhẹ
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12), // Bo góc 12px cho input
+                            borderSide: BorderSide.none,
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: _primaryColor, width: 1.5),
                           ),
                         ),
-                        const SizedBox(height: 16),
-                        TextField(
-                          controller: _passwordController,
-                          obscureText: true,
-                          style: const TextStyle(color: AppTheme.textPrimary, fontSize: 15),
-                          decoration: InputDecoration(
-                            labelText: "Mật khẩu",
-                            labelStyle: const TextStyle(fontSize: 14),
-                            prefixIcon: const Icon(Icons.lock_outline_rounded, color: AppTheme.primaryColor, size: 22),
-                            filled: true,
-                            fillColor: const Color(0xFFF8FAFC),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide.none,
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide.none,
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: const BorderSide(color: AppTheme.primaryColor, width: 1.5),
-                            ),
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      // Password Field
+                      TextField(
+                        controller: _passwordController,
+                        obscureText: true,
+                        style: TextStyle(fontFamily: _fontFamily, fontSize: 15, color: Colors.black87),
+                        decoration: InputDecoration(
+                          labelText: "Mật khẩu",
+                          labelStyle: TextStyle(fontFamily: _fontFamily, fontSize: 14, color: Colors.grey[600]),
+                          prefixIcon: Icon(Icons.lock_outline_rounded, color: _primaryColor, size: 22),
+                          filled: true,
+                          fillColor: _bgColor,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: _primaryColor, width: 1.5),
                           ),
                         ),
-                        const SizedBox(height: 28),
+                      ),
+                      const SizedBox(height: 32),
 
-                        // Login Button with custom style
-                        Container(
-                          width: double.infinity,
-                          height: 56,
-                          decoration: BoxDecoration(
-                            gradient: AppTheme.primaryGradient,
-                            borderRadius: BorderRadius.circular(18),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppTheme.primaryColor.withAlpha(70),
-                                blurRadius: 16,
-                                offset: const Offset(0, 6),
-                              ),
-                            ],
-                          ),
-                          child: ElevatedButton(
-                            onPressed: _isLoading ? null : _login,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.transparent,
-                              foregroundColor: Colors.white,
-                              shadowColor: Colors.transparent,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                      // Nút Đăng Nhập CTA - Sử dụng màu Điểm nhấn (Vàng nghệ / Cam)
+                      SizedBox(
+                        width: double.infinity,
+                        height: 52, // Độ cao nút tiêu chuẩn
+                        child: ElevatedButton(
+                          onPressed: _isLoading ? null : _login,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _accentColor, // Màu Vàng/Cam tạo điểm nhấn mạnh
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12), // Bo góc 12px
                             ),
-                            child: _isLoading 
-                              ? const SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
-                                )
-                              : const Text(
-                                  "ĐĂNG NHẬP",
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: 1.5,
-                                  ),
+                          ),
+                          child: _isLoading 
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                              )
+                            : Text(
+                                "ĐĂNG NHẬP",
+                                style: TextStyle(
+                                  fontFamily: _fontFamily,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1.0,
                                 ),
-                          ),
+                              ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
