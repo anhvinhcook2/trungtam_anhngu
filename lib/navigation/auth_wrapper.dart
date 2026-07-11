@@ -9,11 +9,12 @@ import '../screens/student_dashboard.dart';
 class AuthWrapper extends StatelessWidget {
   const AuthWrapper({super.key});
 
-  // Khai báo màu sắc theo UI/UX Concept
+  // --- BẢNG MÀU CHUẨN CONCEPT ORGANIC TECH ---
   final Color _bgColor = const Color(0xFFF8F9FA); // Light Grey
   final Color _primaryColor = const Color(0xFF004D40); // Deep Jungle Green
+  final String _fontFamily = 'Nunito';
 
-  // Widget Loading tuân thủ concept hình khối (Card bo góc, soft shadow)
+  // Widget Loading tinh tế với phong cách Organic Tech
   Widget _buildLoadingScreen() {
     return Scaffold(
       backgroundColor: _bgColor,
@@ -22,31 +23,32 @@ class AuthWrapper extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(32),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(16), // Bo góc 16px
+                borderRadius: BorderRadius.circular(32), // Bo góc lớn hơn
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05), // Bóng đổ mờ
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
+                    color: Colors.black.withOpacity(0.06),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
                   ),
                 ],
               ),
               child: CircularProgressIndicator(
                 valueColor: AlwaysStoppedAnimation<Color>(_primaryColor),
-                strokeWidth: 3,
+                strokeWidth: 4,
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
             Text(
-              'Đang đồng bộ dữ liệu...',
+              'Đang kết nối hệ thống...',
               style: TextStyle(
-                fontFamily: 'Nunito', // Hoặc Poppins/Quicksand tùy bạn cấu hình trong pubspec
+                fontFamily: _fontFamily,
                 fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: _primaryColor,
+                fontWeight: FontWeight.w700,
+                color: _primaryColor.withOpacity(0.8),
+                letterSpacing: 0.5,
               ),
             ),
           ],
@@ -60,6 +62,7 @@ class AuthWrapper extends StatelessWidget {
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, authSnapshot) {
+        // Trạng thái đang tải từ Firebase Auth
         if (authSnapshot.connectionState == ConnectionState.waiting) {
           return _buildLoadingScreen();
         }
@@ -72,6 +75,7 @@ class AuthWrapper extends StatelessWidget {
                 .doc(authSnapshot.data!.uid)
                 .get(),
             builder: (context, userSnapshot) {
+              // Trạng thái đang tải dữ liệu người dùng từ Firestore
               if (userSnapshot.connectionState == ConnectionState.waiting) {
                 return _buildLoadingScreen();
               }
@@ -79,12 +83,13 @@ class AuthWrapper extends StatelessWidget {
               if (userSnapshot.hasData && userSnapshot.data!.exists) {
                 String role = userSnapshot.data!.get('role') ?? 'student';
 
-                // Điều hướng dựa trên logic gốc
+                // Điều hướng phân quyền
                 if (role == 'admin') return const AdminDashboard();
                 if (role == 'teacher') return const TeacherDashboard();
                 return const StudentDashboard();
               }
 
+              // Trường hợp người dùng tồn tại trong Auth nhưng không có trong Firestore
               return const AuthScreen();
             },
           );

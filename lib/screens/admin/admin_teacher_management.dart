@@ -299,7 +299,7 @@ class _AdminTeacherManagementState extends State<AdminTeacherManagement> {
                           TextButton.icon(
                             onPressed: () => _showEditDialog(doc.id, doc['name']),
                             icon: const Icon(Icons.edit_rounded, size: 18, color: Color(0xFF3B82F6)), // Xanh dương mượt
-                            label: const Text("Sửa", style: TextStyle(fontFamily: _fontFamily, color: Color(0xFF3B82F6), fontWeight: FontWeight.w700)),
+                            label: Text("Sửa", style: TextStyle(fontFamily: _fontFamily, color: Color(0xFF3B82F6), fontWeight: FontWeight.w700)),
                           ),
                           TextButton.icon(
                             onPressed: () => _deleteTeacher(doc.id, doc['email']),
@@ -320,7 +320,6 @@ class _AdminTeacherManagementState extends State<AdminTeacherManagement> {
         onPressed: _showAddDialog,
         backgroundColor: _primaryColor, // Deep Jungle Green
         elevation: 4,
-        shadowColor: _primaryColor.withOpacity(0.4),
         icon: const Icon(Icons.person_add_alt_1_rounded, color: Colors.white),
         label: Text(
           "THÊM GIÁO VIÊN", 
