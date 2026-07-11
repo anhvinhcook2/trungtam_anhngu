@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  // Colors
-  static const Color primaryColor = Color(0xFF6366F1); // Indigo
-  static const Color secondaryColor = Color(0xFF8B5CF6); // Violet
-  static const Color accentColor = Color(0xFFEC4899); // Pink
-  static const Color backgroundColor = Color(0xFFF8FAFC);
+  // Colors - Bảng màu chuẩn Organic Tech
+  static const Color primaryColor = Color(0xFF004D40); // Deep Jungle Green
+  static const Color secondaryColor = Color(0xFF00695C); // Teal Green (Dùng cho gradient)
+  static const Color accentColor = Color(0xFFF59E0B); // Amber / Cam nhạt (CTA)
+  static const Color backgroundColor = Color(0xFFF8F9FA); // Light Grey
   static const Color surfaceColor = Colors.white;
-  static const Color textPrimary = Color(0xFF1E293B);
-  static const Color textSecondary = Color(0xFF64748B);
+  static const Color textPrimary = Color(0xFF1F2937); // Dark Grey (dễ đọc hơn đen tuyền)
+  static const Color textSecondary = Color(0xFF6B7280); // Grey
+
+  // Font chữ chủ đạo
+  static const String fontFamily = 'Nunito'; 
 
   // Gradients
   static const LinearGradient primaryGradient = LinearGradient(
@@ -18,32 +21,33 @@ class AppTheme {
   );
 
   static const LinearGradient accentGradient = LinearGradient(
-    colors: [secondaryColor, accentColor],
+    colors: [accentColor, Color(0xFFFBBF24)], // Amber to Lighter Amber
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  // Shadows
+  // Shadows - Đổ bóng siêu mờ và mềm mại
   static List<BoxShadow> softShadow = [
     BoxShadow(
-      color: Colors.black.withAlpha(13), // 0.05 * 255 ≈ 13
-      blurRadius: 10,
-      offset: const Offset(0, 4),
+      color: Colors.black.withAlpha(10), // Khoảng 4% opacity
+      blurRadius: 20,
+      offset: const Offset(0, 8),
     ),
   ];
 
   static List<BoxShadow> mediumShadow = [
     BoxShadow(
-      color: primaryColor.withAlpha(51), // 0.2 * 255 ≈ 51
-      blurRadius: 20,
+      color: primaryColor.withAlpha(30), // Bóng đổ mang sắc xanh nhẹ
+      blurRadius: 24,
       offset: const Offset(0, 10),
     ),
   ];
 
-  // Theme Data
+  // Theme Data - Áp dụng cho toàn bộ App
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
+      fontFamily: fontFamily, // Áp dụng font mặc định
       colorScheme: ColorScheme.fromSeed(
         seedColor: primaryColor,
         primary: primaryColor,
@@ -51,50 +55,65 @@ class AppTheme {
         surface: surfaceColor,
       ),
       scaffoldBackgroundColor: backgroundColor,
+      
+      // AppBar
       appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
         elevation: 0,
+        scrolledUnderElevation: 0,
         centerTitle: true,
         titleTextStyle: TextStyle(
-          color: textPrimary,
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
+          fontFamily: fontFamily,
+          color: primaryColor,
+          fontSize: 18,
+          fontWeight: FontWeight.w800,
         ),
-        iconTheme: IconThemeData(color: textPrimary),
+        iconTheme: IconThemeData(color: primaryColor),
       ),
+      
+      // Cards
       cardTheme: CardThemeData(
         elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         color: surfaceColor,
       ),
+      
+      // Nút bấm (ElevatedButton)
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: primaryColor,
           foregroundColor: Colors.white,
-          minimumSize: const Size(double.infinity, 56),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          minimumSize: const Size(double.infinity, 52),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), // Bo 12px
           elevation: 0,
-          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          textStyle: const TextStyle(
+            fontFamily: fontFamily, 
+            fontSize: 15, 
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
+          ),
         ),
       ),
+      
+      // Ô nhập liệu (TextField/Input)
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Colors.white,
+        fillColor: backgroundColor, // Dùng nền xám nhạt để tạo chiều sâu
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: primaryColor, width: 2),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: primaryColor, width: 1.5),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-        labelStyle: const TextStyle(color: textSecondary),
-        hintStyle: const TextStyle(color: textSecondary),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        labelStyle: const TextStyle(fontFamily: fontFamily, color: textSecondary, fontSize: 14),
+        hintStyle: const TextStyle(fontFamily: fontFamily, color: textSecondary, fontSize: 14),
       ),
     );
   }
