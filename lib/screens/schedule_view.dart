@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../utils/app_theme.dart'; // Giữ lại nếu cần dùng sau này
 
 class ScheduleView extends StatefulWidget {
   final String? studentId;
@@ -13,7 +12,8 @@ class ScheduleView extends StatefulWidget {
 }
 
 class _ScheduleViewState extends State<ScheduleView> {
-  DateTime _selectedWeekStart = _getStartOfWeek(DateTime.now());
+  DateTime? _selectedWeekStart;
+  List<DateTime> _availableWeeks = [];
 
   // --- BẢNG MÀU CHUẨN CONCEPT ORGANIC TECH ---
   final Color _primaryColor = const Color(0xFF004D40); // Deep Jungle Green
@@ -26,9 +26,94 @@ class _ScheduleViewState extends State<ScheduleView> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _initializeWeeks();
+  }
+
+  Future<void> _initializeWeeks() async {
+    String? uid = widget.studentId ?? widget.teacherId;
+    String role = widget.studentId != null ? 'student' : 'teacher';
+    if (uid == null) return;
+
+    Query classQuery = FirebaseFirestore.instance.collection('classes');
+    if (role == 'teacher') {
+      classQuery = classQuery.where('teacherId', isEqualTo: uid);
+    } else {
+      classQuery = classQuery.where('studentIds', arrayContains: uid);
+    }
+
+    var snapshot = await classQuery.get();
+    if (snapshot.docs.isEmpty) {
+      if (!mounted) return;
+      setState(() => _selectedWeekStart = _getStartOfWeek(DateTime.now()));
+      return;
+    }
+
+    DateTime minStart = DateTime.now();
+    DateTime maxEnd = DateTime.now();
+    bool first = true;
+
+    for (var doc in snapshot.docs) {
+      var data = doc.data() as Map<String, dynamic>;
+      DateTime start = (data['start_date'] as Timestamp).toDate();
+      DateTime end = (data['end_date'] as Timestamp).toDate();
+
+      if (first) {
+        minStart = start;
+        maxEnd = end;
+        first = false;
+      } else {
+        if (start.isBefore(minStart)) minStart = start;
+        if (end.isAfter(maxEnd)) maxEnd = end;
+      }
+    }
+
+    List<DateTime> weeks = [];
+    DateTime currentWeek = _getStartOfWeek(minStart);
+    DateTime lastWeek = _getStartOfWeek(maxEnd);
+
+    while (!currentWeek.isAfter(lastWeek)) {
+      weeks.add(currentWeek);
+      currentWeek = currentWeek.add(const Duration(days: 7));
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _availableWeeks = weeks;
+      DateTime now = _getStartOfWeek(DateTime.now());
+      // Nếu ngày hiện tại nằm trong range, set về tuần hiện tại, nếu không về tuần đầu tiên
+      if (weeks.isNotEmpty && (now.isBefore(weeks.first) || now.isAfter(weeks.last))) {
+        _selectedWeekStart = weeks.first;
+      } else {
+        _selectedWeekStart = now;
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     String? uid = widget.studentId ?? widget.teacherId;
     String role = widget.studentId != null ? 'student' : 'teacher';
+
+    if (uid == null) {
+      return Scaffold(
+        backgroundColor: _bgColor,
+        body: Center(
+          child: Text(
+            "Không tìm thấy người dùng để hiển thị lịch học.",
+            style: TextStyle(fontFamily: _fontFamily, color: Colors.grey[700], fontSize: 16),
+          ),
+        ),
+      );
+    }
+
+    Query classQuery = FirebaseFirestore.instance.collection('classes');
+    if (role == 'teacher') {
+      classQuery = classQuery.where('teacherId', isEqualTo: uid);
+    } else {
+      classQuery = classQuery.where('studentIds', arrayContains: uid);
+    }
 
     return Scaffold(
       backgroundColor: _bgColor,
@@ -47,27 +132,28 @@ class _ScheduleViewState extends State<ScheduleView> {
         backgroundColor: Colors.white,
         iconTheme: IconThemeData(color: _primaryColor),
         shape: Border(
-          bottom: BorderSide(color: Colors.grey.withOpacity(0.1), width: 1),
+          bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.1), width: 1),
         ),
       ),
       body: FutureBuilder<QuerySnapshot>(
-        future: FirebaseFirestore.instance.collection('classes')
-            .where(role == 'teacher' ? 'teacherId' : 'studentIds', 
-                   isEqualTo: role == 'teacher' ? uid : null,
-                   arrayContains: role == 'student' ? uid : null)
-            .get(),
+        future: classQuery.get(),
         builder: (context, classSnap) {
           if (!classSnap.hasData) {
             return Center(child: CircularProgressIndicator(color: _primaryColor));
           }
           
           List<String> myClassIds = classSnap.data!.docs.map((d) => d.id).toList();
-          Map<String, String> classRooms = {};
+          Map<String, Map<String, String>> classDetails = {};
           for (var doc in classSnap.data!.docs) {
-            classRooms[doc.id] = (doc.data() as Map<String, dynamic>)['room'] ?? 'N/A';
+            var data = doc.data() as Map<String, dynamic>;
+            classDetails[doc.id] = {
+              'room': data['room'] ?? 'N/A',
+              'name': data['name'] ?? 'N/A',
+              'subject': data['subject'] ?? 'N/A',
+            };
           }
 
-          if (myClassIds.isEmpty) {
+          if (myClassIds.isEmpty || _selectedWeekStart == null) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -86,8 +172,8 @@ class _ScheduleViewState extends State<ScheduleView> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildWeekPicker(myClassIds),
-              Expanded(child: _buildScheduleGrid(myClassIds, classRooms)),
+              _buildWeekPicker(),
+              Expanded(child: _buildScheduleGrid(myClassIds, classDetails)),
             ],
           );
         },
@@ -95,7 +181,7 @@ class _ScheduleViewState extends State<ScheduleView> {
     );
   }
 
-  Widget _buildWeekPicker(List<String> classIds) {
+  Widget _buildWeekPicker() {
     return Container(
       height: 85,
       padding: const EdgeInsets.symmetric(vertical: 12),
@@ -103,7 +189,7 @@ class _ScheduleViewState extends State<ScheduleView> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -112,11 +198,11 @@ class _ScheduleViewState extends State<ScheduleView> {
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: 10,
+        itemCount: _availableWeeks.length,
         itemBuilder: (context, index) {
-          DateTime weekStart = _getStartOfWeek(DateTime.now().add(Duration(days: index * 7 - 35)));
+          DateTime weekStart = _availableWeeks[index];
           DateTime weekEnd = weekStart.add(const Duration(days: 6));
-          bool isSelected = weekStart.isAtSameMomentAs(_selectedWeekStart);
+          bool isSelected = weekStart.isAtSameMomentAs(_selectedWeekStart!);
 
           return GestureDetector(
             onTap: () => setState(() => _selectedWeekStart = weekStart),
@@ -126,7 +212,7 @@ class _ScheduleViewState extends State<ScheduleView> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
                 color: isSelected ? _primaryColor : Colors.white,
-                borderRadius: BorderRadius.circular(16), // Bo góc 16px chuẩn concept
+                borderRadius: BorderRadius.circular(16), 
                 border: Border.all(
                   color: isSelected ? _primaryColor : Colors.grey.shade200,
                   width: 1.5,
@@ -134,7 +220,7 @@ class _ScheduleViewState extends State<ScheduleView> {
                 boxShadow: isSelected
                     ? [
                         BoxShadow(
-                          color: _primaryColor.withOpacity(0.3),
+                          color: _primaryColor.withValues(alpha: 0.3),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -145,7 +231,7 @@ class _ScheduleViewState extends State<ScheduleView> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    "Tuần ${index + 1}", // Có thể custom title ở đây nếu muốn
+                    "Tuần ${index + 1}",
                     style: TextStyle(
                       fontFamily: _fontFamily,
                       fontSize: 12,
@@ -172,13 +258,13 @@ class _ScheduleViewState extends State<ScheduleView> {
     );
   }
 
-  Widget _buildScheduleGrid(List<String> classIds, Map<String, String> classRooms) {
-    DateTime weekEnd = _selectedWeekStart.add(const Duration(days: 7));
+  Widget _buildScheduleGrid(List<String> classIds, Map<String, Map<String, String>> classDetails) {
+    DateTime weekEnd = _selectedWeekStart!.add(const Duration(days: 7));
     
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance.collection('schedules')
           .where('classId', whereIn: classIds)
-          .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(_selectedWeekStart))
+          .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(_selectedWeekStart!))
           .where('date', isLessThan: Timestamp.fromDate(weekEnd))
           .snapshots(),
       builder: (context, snapshot) {
@@ -215,7 +301,6 @@ class _ScheduleViewState extends State<ScheduleView> {
             int day = i + 1;
             var daySchedules = schedules.where((s) => s['dayOfWeek'] == day).toList();
             
-            // Nếu ngày hôm đó không có môn nào thì thu gọn (ẩn đi) cho đỡ tốn diện tích
             if (daySchedules.isEmpty) return const SizedBox.shrink();
 
             return Padding(
@@ -223,7 +308,6 @@ class _ScheduleViewState extends State<ScheduleView> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Cột hiển thị Thứ
                   SizedBox(
                     width: 60, 
                     child: Column(
@@ -241,9 +325,9 @@ class _ScheduleViewState extends State<ScheduleView> {
                         Container(
                           margin: const EdgeInsets.only(top: 8),
                           width: 4,
-                          height: 30, // Đường line trang trí
+                          height: 30,
                           decoration: BoxDecoration(
-                            color: _primaryColor.withOpacity(0.2),
+                            color: _primaryColor.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(4),
                           ),
                         )
@@ -252,7 +336,6 @@ class _ScheduleViewState extends State<ScheduleView> {
                   ),
                   const SizedBox(width: 8),
                   
-                  // Cột danh sách các lớp học trong ngày
                   Expanded(
                     child: Column(
                       children: daySchedules.map((s) => Container(
@@ -260,10 +343,10 @@ class _ScheduleViewState extends State<ScheduleView> {
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(16), // Bo góc 16px
+                          borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.04),
+                              color: Colors.black.withValues(alpha: 0.04),
                               blurRadius: 16,
                               offset: const Offset(0, 6),
                             ),
@@ -272,13 +355,12 @@ class _ScheduleViewState extends State<ScheduleView> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Dòng thời gian
                             Row(
                               children: [
                                 Container(
                                   padding: const EdgeInsets.all(6),
                                   decoration: BoxDecoration(
-                                    color: _accentColor.withOpacity(0.15),
+                                    color: _accentColor.withValues(alpha: 0.15),
                                     shape: BoxShape.circle,
                                   ),
                                   child: Icon(Icons.access_time_filled_rounded, color: _accentColor, size: 16),
@@ -301,14 +383,13 @@ class _ScheduleViewState extends State<ScheduleView> {
                               child: Divider(color: Colors.grey.shade200, height: 1),
                             ),
                             
-                            // Thông tin Lớp & Phòng
                             Row(
                               children: [
                                 Icon(Icons.class_outlined, size: 16, color: Colors.grey[500]),
                                 const SizedBox(width: 6),
                                 Expanded(
                                   child: Text(
-                                    "Lớp: ${s['classId']}",
+                                    "Lớp: ${classDetails[s['classId']]?['name'] ?? 'N/A'} (${classDetails[s['classId']]?['subject'] ?? 'N/A'})",
                                     style: TextStyle(fontFamily: _fontFamily, fontSize: 14, color: Colors.black87, fontWeight: FontWeight.w600),
                                   ),
                                 ),
@@ -320,7 +401,7 @@ class _ScheduleViewState extends State<ScheduleView> {
                                 Icon(Icons.meeting_room_outlined, size: 16, color: Colors.grey[500]),
                                 const SizedBox(width: 6),
                                 Text(
-                                  "Phòng: ${classRooms[s['classId']] ?? 'N/A'}",
+                                  "Phòng: ${classDetails[s['classId']]?['room'] ?? 'N/A'}",
                                   style: TextStyle(fontFamily: _fontFamily, fontSize: 14, color: Colors.grey[700]),
                                 ),
                               ],

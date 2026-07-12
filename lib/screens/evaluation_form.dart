@@ -114,7 +114,7 @@ class _EvaluationFormScreenState extends State<EvaluationFormScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
         shape: Border(
-          bottom: BorderSide(color: Colors.grey.withOpacity(0.1), width: 1),
+          bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.1), width: 1),
         ),
         iconTheme: IconThemeData(color: _primaryColor),
       ),
@@ -127,7 +127,7 @@ class _EvaluationFormScreenState extends State<EvaluationFormScreen> {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.04),
+                color: Colors.black.withValues(alpha: 0.04),
                 blurRadius: 24,
                 offset: const Offset(0, 8),
               ),

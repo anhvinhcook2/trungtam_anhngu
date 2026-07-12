@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-import 'navigation/auth_wrapper.dart';
+import 'screens/splash_screen.dart';
 import 'utils/app_theme.dart';
 
 void main() async {
@@ -23,7 +23,7 @@ class EnglishCenterApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Quản Lý Trung Tâm',
       theme: AppTheme.lightTheme,
-      home: const AuthWrapper(),
+      home: const SplashScreen(),
     );
   }
 }

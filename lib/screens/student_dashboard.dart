@@ -90,7 +90,6 @@ class _StudentDashboardState extends State<StudentDashboard> {
 
     String code = _searchController.text.trim().toUpperCase();
 
-    print("DEBUG: Đang tìm với mã: '$code'");
     if (code.isEmpty) return;
 
     setState(() {
@@ -105,14 +104,12 @@ class _StudentDashboardState extends State<StudentDashboard> {
           .where('student_code', isEqualTo: code)
           .limit(1)
           .get();
-      print("DEBUG: Số lượng tìm thấy theo student_code: ${query.docs.length}");
       if (query.docs.isEmpty) {
         // Fallback for older data that might still use camelCase
         query = await _db.collection('users')
             .where('studentCode', isEqualTo: code)
             .limit(1)
             .get();
-        print("DEBUG: Số lượng tìm thấy theo studentCode: ${query.docs.length}");
       }
 
       if (query.docs.isNotEmpty) {
@@ -170,7 +167,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
         elevation: 0,
         scrolledUnderElevation: 0,
         shape: Border(
-          bottom: BorderSide(color: Colors.grey.withOpacity(0.1), width: 1),
+          bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.1), width: 1),
         ),
         actions: [
           IconButton(
@@ -191,7 +188,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
               borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
+                  color: Colors.black.withValues(alpha: 0.04),
                   blurRadius: 20,
                   offset: const Offset(0, 8),
                 ),
@@ -204,7 +201,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                     decoration: BoxDecoration(
                       color: _bgColor, // Đồng bộ màu nền xám nhạt
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                      border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
                     ),
                     child: TextField(
                       controller: _searchController,
@@ -230,7 +227,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: _primaryColor.withOpacity(0.3),
+                        color: _primaryColor.withValues(alpha: 0.3),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       )
@@ -316,7 +313,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                 color: Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
+                    color: Colors.black.withValues(alpha: 0.04),
                     blurRadius: 20,
                     offset: const Offset(0, -5),
                   ),
@@ -363,7 +360,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                         color: Colors.white,
                         shape: BoxShape.circle,
                         boxShadow: [
-                          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 20, offset: const Offset(0, 4))
+                          BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 20, offset: const Offset(0, 4))
                         ],
                       ),
                       child: Icon(Icons.school_rounded, size: 64, color: Colors.grey[300]),
@@ -398,7 +395,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
         borderRadius: BorderRadius.circular(16), // Bo góc 16px
         boxShadow: [
           BoxShadow(
-            color: _primaryColor.withOpacity(0.3),
+            color: _primaryColor.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -410,7 +407,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
+              color: Colors.white.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.person_pin_rounded, color: Colors.white, size: 36),
@@ -428,7 +425,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.2),
+                    color: Colors.black.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -460,7 +457,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4)),
+                BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4)),
               ],
             ),
             child: Text("Chưa đăng ký lớp học nào.", style: TextStyle(fontFamily: _fontFamily, color: Colors.grey[500], fontStyle: FontStyle.italic)),
@@ -491,7 +488,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                 if (tuitionSnapshot.hasData && tuitionSnapshot.data!.docs.isNotEmpty) {
                   status = tuitionSnapshot.data!.docs.first['status'] == 'paid' ? "Đã đóng" : "Đang xử lý";
                   statusColor = status == "Đã đóng" ? const Color(0xFF10B981) : _accentColor;
-                  bgColor = status == "Đã đóng" ? const Color(0xFF10B981).withOpacity(0.1) : _accentColor.withOpacity(0.1);
+                  bgColor = status == "Đã đóng" ? const Color(0xFF10B981).withValues(alpha: 0.1) : _accentColor.withValues(alpha: 0.1);
                 }
                 
                 return Container(
@@ -501,7 +498,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.03),
+                        color: Colors.black.withValues(alpha: 0.03),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -512,7 +509,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                     leading: Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: _primaryColor.withOpacity(0.1),
+                        color: _primaryColor.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(Icons.class_rounded, color: _primaryColor, size: 20),
@@ -569,7 +566,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4)),
+                BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4)),
               ],
             ),
             child: Center(
@@ -600,7 +597,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.03),
+                    color: Colors.black.withValues(alpha: 0.03),
                     blurRadius: 12,
                     offset: const Offset(0, 5),
                   ),
@@ -625,7 +622,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF10B981).withOpacity(0.1),
+                          color: const Color(0xFF10B981).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(

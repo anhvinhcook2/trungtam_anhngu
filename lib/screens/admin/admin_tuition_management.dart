@@ -31,7 +31,7 @@ class _AdminTuitionManagementState extends State<AdminTuitionManagement> {
         scrolledUnderElevation: 0,
         centerTitle: true,
         iconTheme: IconThemeData(color: _primaryColor),
-        shape: Border(bottom: BorderSide(color: Colors.grey.withOpacity(0.1), width: 1)),
+        shape: Border(bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.1), width: 1)),
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -69,9 +69,9 @@ class _AdminTuitionManagementState extends State<AdminTuitionManagement> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16), // Bo góc 16px
                   boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))
+                    BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4))
                   ],
-                  border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                  border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
                 ),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
@@ -102,7 +102,7 @@ class _AdminTuitionManagementState extends State<AdminTuitionManagement> {
                   children: [
                     Container(
                       padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 20, offset: const Offset(0, 4))]),
+                      decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 20, offset: const Offset(0, 4))]),
                       child: Icon(Icons.payments_outlined, size: 64, color: Colors.grey[300]),
                     ),
                     const SizedBox(height: 16),
@@ -160,7 +160,7 @@ class _AdminTuitionManagementState extends State<AdminTuitionManagement> {
 
                               // Cấu hình màu sắc theo trạng thái
                               Color statusColor = isPaid ? const Color(0xFF10B981) : Colors.red.shade500;
-                              Color statusBgColor = isPaid ? const Color(0xFF10B981).withOpacity(0.1) : Colors.red.shade50;
+                              Color statusBgColor = isPaid ? const Color(0xFF10B981).withValues(alpha: 0.1) : Colors.red.shade50;
                               String statusText = isPaid ? "Đã đóng ($month)" : "Chưa đóng học phí";
                               IconData statusIcon = isPaid ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded;
 
@@ -170,14 +170,14 @@ class _AdminTuitionManagementState extends State<AdminTuitionManagement> {
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(16),
                                   boxShadow: [
-                                    BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))
+                                    BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4))
                                   ],
-                                  border: Border.all(color: isPaid ? Colors.green.withOpacity(0.3) : Colors.transparent, width: 1),
+                                  border: Border.all(color: isPaid ? Colors.green.withValues(alpha: 0.3) : Colors.transparent, width: 1),
                                 ),
                                 child: ListTile(
                                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                                   leading: CircleAvatar(
-                                    backgroundColor: _primaryColor.withOpacity(0.1),
+                                    backgroundColor: _primaryColor.withValues(alpha: 0.1),
                                     child: Text(
                                       s['name'][0].toUpperCase(),
                                       style: TextStyle(fontFamily: _fontFamily, color: _primaryColor, fontWeight: FontWeight.bold),

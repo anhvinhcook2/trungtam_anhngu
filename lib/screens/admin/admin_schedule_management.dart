@@ -11,44 +11,71 @@ class AdminScheduleManagement extends StatefulWidget {
 class _AdminScheduleManagementState extends State<AdminScheduleManagement> {
   final _db = FirebaseFirestore.instance;
   final List<String> _rooms = ["Phòng 101", "Phòng 102", "Phòng 201", "Phòng 202", "Phòng 301"];
-  
+
   static DateTime _getStartOfWeek(DateTime date) {
     DateTime start = date.subtract(Duration(days: date.weekday - 1));
     return DateTime(start.year, start.month, start.day);
   }
 
-  late DateTime _selectedWeekStart;
+  int _selectedYear = DateTime.now().year;
+  DateTime? _selectedWeekStart;
   List<DateTime> _availableWeeks = [];
 
   @override
   void initState() {
     super.initState();
-    _selectedWeekStart = _getStartOfWeek(DateTime.now());
-    _generateWeeks();
+    _selectCurrentWeek();
   }
 
-  void _generateWeeks() {
+  void _generateWeeksForYear(int year) {
     List<DateTime> weeks = [];
-    DateTime now = DateTime.now();
-    for (int i = -10; i <= 10; i++) {
-      weeks.add(_getStartOfWeek(now.add(Duration(days: i * 7))));
+    DateTime firstDay = DateTime(year, 1, 1);
+    DateTime firstMonday = firstDay.add(Duration(days: (8 - firstDay.weekday) % 7));
+    
+    DateTime currentWeek = firstMonday;
+    while (currentWeek.year == year) {
+      weeks.add(currentWeek);
+      currentWeek = currentWeek.add(const Duration(days: 7));
     }
-    setState(() => _availableWeeks = weeks);
+    
+    setState(() {
+      _availableWeeks = weeks;
+    });
+  }
+
+  void _selectCurrentWeek() {
+    DateTime now = DateTime.now();
+    DateTime startOfCurrentWeek = now.subtract(Duration(days: now.weekday - 1));
+    DateTime currentWeek = DateTime(startOfCurrentWeek.year, startOfCurrentWeek.month, startOfCurrentWeek.day);
+    
+    setState(() {
+      _selectedYear = currentWeek.year;
+      _generateWeeksForYear(_selectedYear);
+      if (_availableWeeks.contains(currentWeek)) {
+        _selectedWeekStart = currentWeek;
+      } else {
+        _selectedWeekStart = _availableWeeks.isNotEmpty ? _availableWeeks.first : null;
+      }
+    });
   }
 
   Future<bool> _isConflict(String classId, String newRoom, DateTime date, String startTime, String endTime, {String? excludeId}) async {
+    var currentClassDoc = await _db.collection('classes').doc(classId).get();
+    var currentClassData = currentClassDoc.data() as Map<String, dynamic>;
+    String currentTeacherId = currentClassData['teacherId'];
+
     final query = await _db.collection('schedules')
         .where('date', isEqualTo: Timestamp.fromDate(date))
         .get();
 
     for (var doc in query.docs) {
       if (excludeId != null && doc.id == excludeId) continue;
-      
-      if (doc['startTime'] == startTime || doc['endTime'] == endTime) {
+      bool timeOverlap = doc['startTime'] == startTime || doc['endTime'] == endTime;
+      if (timeOverlap) {
         var classDoc = await _db.collection('classes').doc(doc['classId']).get();
         if (classDoc.exists) {
           var classData = classDoc.data() as Map<String, dynamic>;
-          if (classData['room'] == newRoom) return true;
+          if (classData['room'] == newRoom || classData['teacherId'] == currentTeacherId) return true;
         }
       }
     }
@@ -58,12 +85,12 @@ class _AdminScheduleManagementState extends State<AdminScheduleManagement> {
   void _showScheduleDialog({DocumentSnapshot? schedule}) async {
     final classes = await _db.collection('classes').get();
     String? selectedClass = schedule?['classId'];
-    
+
     var classDoc = selectedClass != null ? await _db.collection('classes').doc(selectedClass).get() : null;
     String? currentRoom = classDoc?.exists == true ? (classDoc!.data() as Map<String, dynamic>)['room'] : _rooms.first;
 
-    DateTime date = schedule != null ? (schedule['date'] as Timestamp).toDate() : DateTime.now();
-    TimeOfDay startTime = schedule != null 
+    DateTime date = schedule != null ? (schedule['date'] as Timestamp).toDate() : (_selectedWeekStart ?? DateTime.now());
+    TimeOfDay startTime = schedule != null
         ? TimeOfDay(hour: int.parse(schedule['startTime'].split(':')[0]), minute: int.parse(schedule['startTime'].split(':')[1]))
         : const TimeOfDay(hour: 18, minute: 0);
     TimeOfDay endTime = schedule != null
@@ -100,7 +127,7 @@ class _AdminScheduleManagementState extends State<AdminScheduleManagement> {
               ListTile(
                 title: Text("Ngày: ${date.day}/${date.month}/${date.year}"),
                 onTap: () async {
-                  final d = await showDatePicker(context: context, initialDate: date, firstDate: DateTime.now(), lastDate: DateTime(2030));
+                  final d = await showDatePicker(context: context, initialDate: date, firstDate: DateTime(_selectedYear), lastDate: DateTime(_selectedYear, 12, 31));
                   if (d != null) setDialogState(() => date = d);
                 },
               ),
@@ -131,28 +158,15 @@ class _AdminScheduleManagementState extends State<AdminScheduleManagement> {
 
                 if (await _isConflict(selectedClass!, currentRoom!, date, sTime, eTime, excludeId: schedule?.id)) {
                   if (!context.mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Trùng lịch phòng học!"), backgroundColor: Colors.red));
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Trùng lịch!"), backgroundColor: Colors.red));
                   return;
                 }
 
-                // Cập nhật phòng cho lớp
                 await _db.collection('classes').doc(selectedClass).update({'room': currentRoom});
-
                 if (schedule == null) {
-                  await _db.collection('schedules').add({
-                    'classId': selectedClass,
-                    'dayOfWeek': date.weekday,
-                    'date': Timestamp.fromDate(date),
-                    'startTime': sTime,
-                    'endTime': eTime,
-                  });
+                  await _db.collection('schedules').add({'classId': selectedClass, 'dayOfWeek': date.weekday, 'date': Timestamp.fromDate(date), 'startTime': sTime, 'endTime': eTime});
                 } else {
-                  await schedule.reference.update({
-                    'date': Timestamp.fromDate(date),
-                    'dayOfWeek': date.weekday,
-                    'startTime': sTime,
-                    'endTime': eTime,
-                  });
+                  await schedule.reference.update({'date': Timestamp.fromDate(date), 'dayOfWeek': date.weekday, 'startTime': sTime, 'endTime': eTime});
                 }
                 if (!context.mounted) return;
                 Navigator.pop(context);
@@ -168,18 +182,8 @@ class _AdminScheduleManagementState extends State<AdminScheduleManagement> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5F9),
-      appBar: AppBar(
-        title: const Text("Quản lý Thời khóa biểu", style: TextStyle(fontWeight: FontWeight.bold)),
-        elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
-      ),
-      body: Column(
-        children: [
-          _buildWeekPicker(),
-          Expanded(child: _buildScheduleGrid()),
-        ],
-      ),
+      appBar: AppBar(title: const Text("Quản lý TKB", style: TextStyle(fontWeight: FontWeight.bold))),
+      body: Column(children: [_buildYearAndWeekPicker(), Expanded(child: _buildScheduleGrid())]),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showScheduleDialog(),
         icon: const Icon(Icons.add_rounded),
@@ -189,99 +193,84 @@ class _AdminScheduleManagementState extends State<AdminScheduleManagement> {
     );
   }
 
-  Widget _buildWeekPicker() {
+  Widget _buildYearAndWeekPicker() {
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withAlpha(15), blurRadius: 10, offset: const Offset(0, 4))],
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<DateTime>(
-          isExpanded: true,
-          value: _selectedWeekStart,
-          onChanged: (DateTime? newValue) {
-            if (newValue != null) setState(() => _selectedWeekStart = newValue);
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+      child: Row(children: [
+        DropdownButton<int>(
+          value: _selectedYear,
+          items: [2025, 2026, 2027].map((y) => DropdownMenuItem(value: y, child: Text("$y"))).toList(),
+          onChanged: (y) {
+            if (y != null) {
+              setState(() {
+                _selectedYear = y;
+                _generateWeeksForYear(y);
+                _selectedWeekStart = _availableWeeks.isNotEmpty ? _availableWeeks.first : null;
+              });
+            }
           },
-          items: _availableWeeks.map((DateTime weekStart) {
-            DateTime weekEnd = weekStart.add(const Duration(days: 6));
-            String label = "${weekStart.day}/${weekStart.month}/${weekStart.year} - ${weekEnd.day}/${weekEnd.month}/${weekEnd.year}";
-            return DropdownMenuItem<DateTime>(
-              value: weekStart,
-              child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
-            );
-          }).toList(),
         ),
-      ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<DateTime>(
+              isExpanded: true,
+              value: _selectedWeekStart,
+              onChanged: (DateTime? newValue) {
+                if (newValue != null) setState(() => _selectedWeekStart = newValue);
+              },
+              items: _availableWeeks.map((DateTime weekStart) {
+                DateTime weekEnd = weekStart.add(const Duration(days: 6));
+                return DropdownMenuItem<DateTime>(
+                  value: weekStart,
+                  child: Text("Tuần: ${weekStart.day}/${weekStart.month} - ${weekEnd.day}/${weekEnd.month}"),
+                );
+              }).toList(),
+            ),
+          ),
+        ),
+      ]),
     );
   }
 
   Widget _buildScheduleGrid() {
-    DateTime weekEnd = _selectedWeekStart.add(const Duration(days: 7));
-    
+    if (_selectedWeekStart == null) return const Center(child: Text("Chọn tuần"));
+    DateTime weekEnd = _selectedWeekStart!.add(const Duration(days: 7));
     return StreamBuilder<QuerySnapshot>(
       stream: _db.collection('schedules')
-          .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(_selectedWeekStart))
+          .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(_selectedWeekStart!))
           .where('date', isLessThan: Timestamp.fromDate(weekEnd))
           .snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
         var schedules = snapshot.data!.docs;
-        
         return ListView.builder(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           itemCount: 7,
           itemBuilder: (context, i) {
             int day = i + 1;
             var daySchedules = schedules.where((s) => s['dayOfWeek'] == day).toList();
-            
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(left: 8, bottom: 8),
-                    child: Text(day == 7 ? "Chủ Nhật" : "Thứ ${day + 1}", 
-                      style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: Color(0xFF475569))),
-                  ),
-                  daySchedules.isEmpty 
-                    ? Container(
-                        padding: const EdgeInsets.all(16),
-                        width: double.infinity,
-                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
-                        child: const Text("Không có lịch", style: TextStyle(color: Colors.grey)),
-                      )
-                    : Column(
-                        children: daySchedules.map((s) => FutureBuilder<DocumentSnapshot>(
-                          future: _db.collection('classes').doc(s['classId']).get(),
-                          builder: (context, cSnap) {
-                            String room = cSnap.hasData && cSnap.data!.exists ? (cSnap.data!.data() as Map)['room'] ?? 'N/A' : '...';
-                            return Card(
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: Colors.indigo.shade100)),
-                              child: ListTile(
-                                leading: Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(color: Colors.indigo.shade50, borderRadius: BorderRadius.circular(8)),
-                                  child: const Icon(Icons.access_time_filled_rounded, color: Colors.indigo),
-                                ),
-                                title: Text("${s['startTime']} - ${s['endTime']}", style: const TextStyle(fontWeight: FontWeight.bold)),
-                                subtitle: Text("Phòng: $room | Lớp ID: ${s['classId']}"),
-                                trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-                                  IconButton(icon: const Icon(Icons.edit, size: 20, color: Colors.blue), onPressed: () => _showScheduleDialog(schedule: s)),
-                                  IconButton(icon: const Icon(Icons.delete, size: 20, color: Colors.redAccent), onPressed: () => s.reference.delete()),
-                                ]),
-                              ),
-                            );
-                          }
-                        )).toList(),
-                      ),
-                ],
-              ),
-            );
+            return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Padding(padding: const EdgeInsets.all(8.0), child: Text(day == 7 ? "Chủ Nhật" : "Thứ ${day + 1}", style: const TextStyle(fontWeight: FontWeight.bold))),
+              ...daySchedules.map((s) => FutureBuilder<DocumentSnapshot>(
+                future: _db.collection('classes').doc(s['classId']).get(),
+                builder: (context, cSnap) {
+                  Map<String, dynamic> cData = (cSnap.hasData && cSnap.data!.exists) ? cSnap.data!.data() as Map<String, dynamic> : {};
+                  return Card(
+                    child: ListTile(
+                      title: Text("${s['startTime']} - ${s['endTime']}"),
+                      subtitle: Text("Phòng: ${cData['room'] ?? '...'} | Lớp: ${cData['name'] ?? '...'} (${cData['subject'] ?? '...'})"),
+                      trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+                        IconButton(icon: const Icon(Icons.edit, size: 20), onPressed: () => _showScheduleDialog(schedule: s)),
+                        IconButton(icon: const Icon(Icons.delete, size: 20), onPressed: () => s.reference.delete()),
+                      ]),
+                    ),
+                  );
+                }
+              )),
+            ]);
           },
         );
       },

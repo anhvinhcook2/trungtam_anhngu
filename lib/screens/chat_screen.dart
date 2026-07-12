@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../utils/app_theme.dart'; // Vẫn giữ import nếu bạn cần dùng sau này
+
 
 class ChatScreen extends StatefulWidget {
   final String chatId;
@@ -45,7 +45,7 @@ class _ChatScreenState extends State<ChatScreen> {
         centerTitle: false,
         scrolledUnderElevation: 0, // Chống đổi màu nền khi cuộn trên Flutter 3+
         shape: Border(
-          bottom: BorderSide(color: Colors.grey.withOpacity(0.1), width: 1),
+          bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.1), width: 1),
         ),
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios_new_rounded, color: _primaryColor),
@@ -54,7 +54,7 @@ class _ChatScreenState extends State<ChatScreen> {
         title: Row(
           children: [
             CircleAvatar(
-              backgroundColor: _primaryColor.withOpacity(0.1),
+              backgroundColor: _primaryColor.withValues(alpha: 0.1),
               child: Icon(Icons.support_agent_rounded, color: _primaryColor),
             ),
             const SizedBox(width: 12),
@@ -123,7 +123,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.04),
+                                color: Colors.black.withValues(alpha: 0.04),
                                 blurRadius: 20,
                                 offset: const Offset(0, 4),
                               ),
@@ -175,7 +175,7 @@ class _ChatScreenState extends State<ChatScreen> {
                               if (!isMe) ...[
                                 CircleAvatar(
                                   radius: 16,
-                                  backgroundColor: _primaryColor.withOpacity(0.1),
+                                  backgroundColor: _primaryColor.withValues(alpha: 0.1),
                                   child: Icon(Icons.person_rounded, size: 18, color: _primaryColor),
                                 ),
                                 const SizedBox(width: 8),
@@ -195,7 +195,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                       ? [] 
                                       : [
                                           BoxShadow(
-                                            color: Colors.black.withOpacity(0.04),
+                                            color: Colors.black.withValues(alpha: 0.04),
                                             blurRadius: 10,
                                             offset: const Offset(0, 4),
                                           ),
@@ -248,7 +248,7 @@ class _ChatScreenState extends State<ChatScreen> {
               color: Colors.white,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.03),
+                  color: Colors.black.withValues(alpha: 0.03),
                   blurRadius: 15,
                   offset: const Offset(0, -5),
                 ),
@@ -261,7 +261,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     decoration: BoxDecoration(
                       color: _bgColor, // Nền xám nhạt cho ô nhập
                       borderRadius: BorderRadius.circular(16), // Bo góc 16px chuẩn concept
-                      border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                      border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
                     ),
                     child: TextField(
                       controller: _controller,
@@ -286,7 +286,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: _accentColor.withOpacity(0.3),
+                        color: _accentColor.withValues(alpha: 0.3),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       )

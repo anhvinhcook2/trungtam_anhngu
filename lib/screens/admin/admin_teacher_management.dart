@@ -15,6 +15,9 @@ class _AdminTeacherManagementState extends State<AdminTeacherManagement> {
   final _fs = FirebaseService();
   final _db = FirebaseFirestore.instance;
   bool _isLoading = false;
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
+  String? _selectedSubject;
 
   // --- BẢNG MÀU CHUẨN CONCEPT ORGANIC TECH ---
   final Color _primaryColor = const Color(0xFF004D40); // Deep Jungle Green
@@ -28,10 +31,10 @@ class _AdminTeacherManagementState extends State<AdminTeacherManagement> {
       labelText: label,
       labelStyle: TextStyle(fontFamily: _fontFamily, color: Colors.grey[600], fontSize: 14),
       filled: true,
-      fillColor: _bgColor,
+      fillColor: Colors.white,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: _primaryColor, width: 1.5)),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: _primaryColor, width: 1.5)),
     );
   }
 
@@ -42,46 +45,46 @@ class _AdminTeacherManagementState extends State<AdminTeacherManagement> {
 
     showDialog(
       context: context,
-      barrierDismissible: !_isLoading, // Ngăn đóng dialog khi đang xử lý
+      barrierDismissible: !_isLoading,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           title: Text(
-            "Thêm Giáo Viên Mới", 
+            "Thêm Giáo Viên Mới",
             style: TextStyle(fontFamily: _fontFamily, fontWeight: FontWeight.w800, color: _primaryColor, fontSize: 18),
           ),
-          content: _isLoading 
-            ? SizedBox(
-                height: 100, 
-                child: Center(child: CircularProgressIndicator(color: _primaryColor)),
-              )
-            : Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: nameC, 
-                    style: TextStyle(fontFamily: _fontFamily, fontSize: 15),
-                    decoration: _customInputDecoration("Họ và tên"),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: emailC, 
-                    style: TextStyle(fontFamily: _fontFamily, fontSize: 15),
-                    decoration: _customInputDecoration("Email"),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: passC, 
-                    obscureText: true,
-                    style: TextStyle(fontFamily: _fontFamily, fontSize: 15),
-                    decoration: _customInputDecoration("Mật khẩu"),
-                  ),
-                ],
+          content: _isLoading
+              ? SizedBox(
+            height: 100,
+            child: Center(child: CircularProgressIndicator(color: _primaryColor)),
+          )
+              : Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameC,
+                style: TextStyle(fontFamily: _fontFamily, fontSize: 15),
+                decoration: _customInputDecoration("Họ và tên"),
               ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: emailC,
+                style: TextStyle(fontFamily: _fontFamily, fontSize: 15),
+                decoration: _customInputDecoration("Email"),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: passC,
+                obscureText: true,
+                style: TextStyle(fontFamily: _fontFamily, fontSize: 15),
+                decoration: _customInputDecoration("Mật khẩu"),
+              ),
+            ],
+          ),
           actions: _isLoading ? [] : [
             TextButton(
-              onPressed: () => Navigator.pop(context), 
+              onPressed: () => Navigator.pop(context),
               child: Text("Hủy", style: TextStyle(fontFamily: _fontFamily, color: Colors.grey[600], fontWeight: FontWeight.bold)),
             ),
             ElevatedButton(
@@ -94,7 +97,7 @@ class _AdminTeacherManagementState extends State<AdminTeacherManagement> {
               onPressed: () async {
                 if (nameC.text.isEmpty || emailC.text.isEmpty || passC.text.length < 6) return;
                 setDialogState(() => _isLoading = true);
-                
+
                 FirebaseApp? tempApp;
                 try {
                   tempApp = await _fs.createSecondaryInstance();
@@ -132,13 +135,13 @@ class _AdminTeacherManagementState extends State<AdminTeacherManagement> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: Text("Sửa tên giáo viên", style: TextStyle(fontFamily: _fontFamily, fontWeight: FontWeight.w800, color: _primaryColor, fontSize: 18)),
         content: TextField(
-          controller: nameCtrl, 
+          controller: nameCtrl,
           style: TextStyle(fontFamily: _fontFamily, fontSize: 15),
           decoration: _customInputDecoration("Họ và tên mới"),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context), 
+            onPressed: () => Navigator.pop(context),
             child: Text("Hủy", style: TextStyle(fontFamily: _fontFamily, color: Colors.grey[600], fontWeight: FontWeight.bold)),
           ),
           ElevatedButton(
@@ -176,12 +179,12 @@ class _AdminTeacherManagementState extends State<AdminTeacherManagement> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false), 
+            onPressed: () => Navigator.pop(context, false),
             child: Text("Hủy", style: TextStyle(fontFamily: _fontFamily, color: Colors.grey[600], fontWeight: FontWeight.bold)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red.shade400, 
+              backgroundColor: Colors.red.shade400,
               foregroundColor: Colors.white,
               elevation: 0,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -203,130 +206,250 @@ class _AdminTeacherManagementState extends State<AdminTeacherManagement> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _bgColor,
+      backgroundColor: const Color(0xFFF1F5F9),
       appBar: AppBar(
-        title: Text(
-          "Quản Lý Giáo Viên", 
-          style: TextStyle(fontFamily: _fontFamily, fontWeight: FontWeight.w900, fontSize: 18, color: _primaryColor, letterSpacing: 0.5),
-        ),
-        backgroundColor: Colors.white,
+        title: const Text("Quản lý Giáo viên", style: TextStyle(fontWeight: FontWeight.bold)),
         elevation: 0,
-        scrolledUnderElevation: 0,
-        centerTitle: true,
-        iconTheme: IconThemeData(color: _primaryColor),
-        shape: Border(bottom: BorderSide(color: Colors.grey.withOpacity(0.1), width: 1)),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: _db.collection('users').where('role', isEqualTo: 'teacher').snapshots(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) return Center(child: CircularProgressIndicator(color: _primaryColor));
-          
-          if (snapshot.data!.docs.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.person_search_rounded, size: 64, color: Colors.grey[300]),
-                  const SizedBox(height: 16),
-                  Text("Chưa có giáo viên nào.", style: TextStyle(fontFamily: _fontFamily, color: Colors.grey[500], fontSize: 16)),
-                ],
-              ),
-            );
-          }
+      body: Column(
+        children: [
+          _buildSearchBar(),
+          _buildStatsSummary(),
+          Expanded(child: _buildTeacherList()),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _showAddDialog,
+        icon: const Icon(Icons.add_rounded, color: Colors.white),
+        label: const Text("Thêm giáo viên", style: TextStyle(color: Colors.white)),
+        backgroundColor: _primaryColor,
+      ),
+    );
+  }
 
-          return ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-            itemCount: snapshot.data!.docs.length,
-            itemBuilder: (context, index) {
-              var doc = snapshot.data!.docs[index];
-              return Container(
-                margin: const EdgeInsets.only(bottom: 20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 20, offset: const Offset(0, 6))
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    ListTile(
-                      contentPadding: const EdgeInsets.all(20),
-                      leading: Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(color: _accentColor.withOpacity(0.2), blurRadius: 10, offset: const Offset(0, 4))
-                          ],
-                        ),
-                        child: CircleAvatar(
-                          radius: 28,
-                          backgroundColor: _accentColor.withOpacity(0.15), // Avatar Cam nhạt (Accent)
-                          child: Text(
-                            doc['name'][0].toUpperCase(), 
-                            style: TextStyle(fontFamily: _fontFamily, color: _accentColor, fontWeight: FontWeight.w900, fontSize: 22),
-                          ),
-                        ),
+  Widget _buildSearchBar() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.black.withAlpha(15), blurRadius: 10, offset: const Offset(0, 4))],
+      ),
+      child: TextField(
+        controller: _searchController,
+        onChanged: (v) => setState(() => _searchQuery = v.trim().toLowerCase()),
+        decoration: const InputDecoration(
+          hintText: "Tìm kiếm tên, email giáo viên...",
+          border: InputBorder.none,
+          icon: Icon(Icons.search, color: Colors.grey),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatsSummary() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: _db.collection('classes').snapshots(),
+      builder: (context, classSnapshot) {
+        Set<String> subjects = {};
+        if (classSnapshot.hasData) {
+          for (var doc in classSnapshot.data!.docs) {
+            subjects.add(doc['subject']);
+          }
+        }
+
+        return StreamBuilder<QuerySnapshot>(
+          stream: _db.collection('users').where('role', isEqualTo: 'teacher').snapshots(),
+          builder: (context, userSnapshot) {
+            final total = userSnapshot.hasData ? userSnapshot.data!.docs.length : 0;
+
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 8, offset: const Offset(0, 2))],
                       ),
-                      title: Text(
-                        doc['name'], 
-                        style: TextStyle(fontFamily: _fontFamily, fontWeight: FontWeight.w800, fontSize: 18, color: Colors.black87),
+                      child: Row(
+                        children: [
+                          Icon(Icons.people_alt, color: _primaryColor),
+                          const SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text("Tổng GV", style: TextStyle(color: Colors.grey, fontSize: 12)),
+                              Text("$total", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                            ],
+                          )
+                        ],
                       ),
-                      subtitle: Padding(
-                        padding: const EdgeInsets.only(top: 6),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "Giáo viên", 
-                              style: TextStyle(fontFamily: _fontFamily, color: _accentColor, fontWeight: FontWeight.bold, fontSize: 13),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              doc['email'], 
-                              style: TextStyle(fontFamily: _fontFamily, color: Colors.grey[600], fontSize: 13),
-                            ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 8, offset: const Offset(0, 2))],
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          isExpanded: true,
+                          hint: const Text("Chọn môn", style: TextStyle(fontSize: 13)),
+                          value: _selectedSubject,
+                          onChanged: (val) => setState(() => _selectedSubject = val),
+                          items: [
+                            const DropdownMenuItem(value: null, child: Text("Tất cả môn")),
+                            ...subjects.map((sub) => DropdownMenuItem(value: sub, child: Text(sub))).toList(),
                           ],
                         ),
                       ),
                     ),
-                    Divider(height: 1, color: Colors.grey.shade100, indent: 20, endIndent: 20),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          TextButton.icon(
-                            onPressed: () => _showEditDialog(doc.id, doc['name']),
-                            icon: const Icon(Icons.edit_rounded, size: 18, color: Color(0xFF3B82F6)), // Xanh dương mượt
-                            label: Text("Sửa", style: TextStyle(fontFamily: _fontFamily, color: Color(0xFF3B82F6), fontWeight: FontWeight.w700)),
-                          ),
-                          TextButton.icon(
-                            onPressed: () => _deleteTeacher(doc.id, doc['email']),
-                            icon: Icon(Icons.delete_outline_rounded, size: 18, color: Colors.red.shade400),
-                            label: Text("Xóa", style: TextStyle(fontFamily: _fontFamily, color: Colors.red.shade400, fontWeight: FontWeight.w700)),
-                          ),
-                        ],
-                      ),
-                    )
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildTeacherList() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: _db.collection('users').where('role', isEqualTo: 'teacher').snapshots(),
+      builder: (context, userSnapshot) {
+        if (!userSnapshot.hasData) return Center(child: CircularProgressIndicator(color: _primaryColor));
+
+        return StreamBuilder<QuerySnapshot>(
+          stream: _db.collection('classes').snapshots(),
+          builder: (context, classSnapshot) {
+            if (!classSnapshot.hasData) return const SizedBox.shrink();
+
+            var docs = userSnapshot.data!.docs;
+
+            // Logic lọc theo môn học: Tìm các teacherId dạy môn đó
+            if (_selectedSubject != null) {
+              Set<String> validTeacherIds = {};
+              for (var doc in classSnapshot.data!.docs) {
+                if (doc['subject'] == _selectedSubject) {
+                  validTeacherIds.add(doc['teacherId']);
+                }
+              }
+              docs = docs.where((d) => validTeacherIds.contains(d.id)).toList();
+            }
+
+            // Lọc theo tìm kiếm
+            if (_searchQuery.isNotEmpty) {
+              docs = docs.where((d) {
+                final data = d.data() as Map<String, dynamic>;
+                final name = (data['name'] ?? '').toString().toLowerCase();
+                final email = (data['email'] ?? '').toString().toLowerCase();
+                return name.contains(_searchQuery) || email.contains(_searchQuery);
+              }).toList();
+            }
+
+            if (docs.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.person_search_rounded, size: 64, color: Colors.grey[300]),
+                    const SizedBox(height: 16),
+                    Text("Không tìm thấy giáo viên.", style: TextStyle(fontFamily: _fontFamily, color: Colors.grey[500], fontSize: 16)),
                   ],
                 ),
               );
-            },
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showAddDialog,
-        backgroundColor: _primaryColor, // Deep Jungle Green
-        elevation: 4,
-        icon: const Icon(Icons.person_add_alt_1_rounded, color: Colors.white),
-        label: Text(
-          "THÊM GIÁO VIÊN", 
-          style: TextStyle(fontFamily: _fontFamily, color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 0.5),
-        ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), // Bo góc 16px
-      ),
+            }
+
+            return ListView.builder(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
+              itemCount: docs.length,
+              itemBuilder: (context, index) {
+                var doc = docs[index];
+                final data = doc.data() as Map<String, dynamic>;
+                final name = data['name'] ?? 'Không tên';
+                final email = data['email'] ?? 'Chưa có email';
+
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(color: _primaryColor.withValues(alpha: 0.1))
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: 48,
+                              height: 48,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                  color: _accentColor.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(12)
+                              ),
+                              child: Text(
+                                  name.isNotEmpty ? name[0].toUpperCase() : '?',
+                                  style: TextStyle(color: _accentColor, fontWeight: FontWeight.bold, fontSize: 20)
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                  const SizedBox(height: 4),
+                                  Text(email, style: const TextStyle(color: Colors.grey, fontSize: 13)),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 8),
+                          child: Divider(),
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            TextButton.icon(
+                              onPressed: () => _showEditDialog(doc.id, name),
+                              icon: Icon(Icons.edit, size: 18, color: Colors.blue.shade600),
+                              label: Text("Sửa", style: TextStyle(color: Colors.blue.shade600)),
+                            ),
+                            const SizedBox(width: 8),
+                            TextButton.icon(
+                              onPressed: () => _deleteTeacher(doc.id, email),
+                              icon: Icon(Icons.delete, size: 18, color: Colors.red.shade400),
+                              label: Text("Xóa", style: TextStyle(color: Colors.red.shade400)),
+                            ),
+                          ],
+                        )
+                      ],
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
     );
   }
 }

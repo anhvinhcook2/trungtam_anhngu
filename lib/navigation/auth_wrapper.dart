@@ -29,7 +29,7 @@ class AuthWrapper extends StatelessWidget {
                 borderRadius: BorderRadius.circular(32), // Bo góc lớn hơn
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.06),
+                    color: Colors.black.withValues(alpha: 0.06),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                   ),
@@ -47,7 +47,7 @@ class AuthWrapper extends StatelessWidget {
                 fontFamily: _fontFamily,
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: _primaryColor.withOpacity(0.8),
+                color: _primaryColor.withValues(alpha: 0.8),
                 letterSpacing: 0.5,
               ),
             ),
@@ -80,8 +80,13 @@ class AuthWrapper extends StatelessWidget {
                 return _buildLoadingScreen();
               }
 
+              if (userSnapshot.hasError) {
+                return _buildLoadingScreen();
+              }
+
               if (userSnapshot.hasData && userSnapshot.data!.exists) {
-                String role = userSnapshot.data!.get('role') ?? 'student';
+                final userData = userSnapshot.data!.data() as Map<String, dynamic>?;
+                final String role = (userData?['role'] as String?) ?? 'student';
 
                 // Điều hướng phân quyền
                 if (role == 'admin') return const AdminDashboard();

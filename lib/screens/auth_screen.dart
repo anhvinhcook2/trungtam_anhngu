@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../utils/app_theme.dart'; // Vẫn giữ nguyên import của bạn
 import 'admin/admin_dashboard.dart';
 import 'teacher_dashboard.dart';
 import 'student_dashboard.dart';
@@ -50,7 +49,8 @@ class _AuthScreenState extends State<AuthScreen> {
       if (res.user != null) {
         DocumentSnapshot userDoc = await _db.collection('users').doc(res.user!.uid).get();
         if (userDoc.exists) {
-          String role = userDoc.get('role') ?? 'student';
+          final userData = userDoc.data() as Map<String, dynamic>?;
+          final String role = (userData?['role'] as String?) ?? 'student';
           
           if (!mounted) return;
           
@@ -129,7 +129,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05), // Bóng đổ mờ
+                        color: Colors.black.withValues(alpha: 0.05), // Bóng đổ mờ
                         blurRadius: 20,
                         offset: const Offset(0, 8),
                       ),
@@ -177,7 +177,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     borderRadius: BorderRadius.circular(16), // Bo góc 16px theo chuẩn
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.04), // Soft shadow
+                        color: Colors.black.withValues(alpha: 0.04), // Soft shadow
                         blurRadius: 24,
                         offset: const Offset(0, 10),
                       ),

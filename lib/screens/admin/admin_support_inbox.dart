@@ -46,9 +46,9 @@ class _AdminSupportInboxState extends State<AdminSupportInbox> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: _primaryColor.withOpacity(0.05),
+                color: _primaryColor.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: _primaryColor.withOpacity(0.1)),
+                border: Border.all(color: _primaryColor.withValues(alpha: 0.1)),
               ),
               child: Text(
                 "Hỏi: $message", 
@@ -118,7 +118,7 @@ class _AdminSupportInboxState extends State<AdminSupportInbox> {
         scrolledUnderElevation: 0,
         centerTitle: true,
         iconTheme: IconThemeData(color: _primaryColor),
-        shape: Border(bottom: BorderSide(color: Colors.grey.withOpacity(0.1), width: 1)),
+        shape: Border(bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.1), width: 1)),
       ),
       body: Column(
         children: [
@@ -128,7 +128,7 @@ class _AdminSupportInboxState extends State<AdminSupportInbox> {
             padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
             decoration: BoxDecoration(
               color: Colors.white,
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8, offset: const Offset(0, 4))],
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 8, offset: const Offset(0, 4))],
             ),
             child: Row(
               children: [
@@ -186,7 +186,7 @@ class _AdminSupportInboxState extends State<AdminSupportInbox> {
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(20), // Bo góc 20px
                           boxShadow: [
-                            BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 15, offset: const Offset(0, 6))
+                            BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 15, offset: const Offset(0, 6))
                           ],
                           // Thêm đường viền mờ bên trái cho tin nhắn chưa đọc
                           border: isUnread ? Border(left: BorderSide(color: _accentColor, width: 4)) : null,
@@ -204,7 +204,7 @@ class _AdminSupportInboxState extends State<AdminSupportInbox> {
                                       Container(
                                         padding: const EdgeInsets.all(8),
                                         decoration: BoxDecoration(
-                                          color: _primaryColor.withOpacity(0.1),
+                                          color: _primaryColor.withValues(alpha: 0.1),
                                           shape: BoxShape.circle,
                                         ),
                                         child: Icon(Icons.person_rounded, color: _primaryColor, size: 20),
@@ -219,7 +219,7 @@ class _AdminSupportInboxState extends State<AdminSupportInbox> {
                                   if (isUnread)
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                      decoration: BoxDecoration(color: _accentColor.withOpacity(0.15), borderRadius: BorderRadius.circular(8)),
+                                      decoration: BoxDecoration(color: _accentColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(8)),
                                       child: Text("Mới", style: TextStyle(fontFamily: _fontFamily, color: _accentColor, fontWeight: FontWeight.bold, fontSize: 12)),
                                     )
                                   else
@@ -249,7 +249,7 @@ class _AdminSupportInboxState extends State<AdminSupportInbox> {
                                     label: Text("Phản hồi", style: TextStyle(fontFamily: _fontFamily, fontWeight: FontWeight.bold)),
                                     style: OutlinedButton.styleFrom(
                                       foregroundColor: _primaryColor,
-                                      side: BorderSide(color: _primaryColor.withOpacity(0.3)),
+                                      side: BorderSide(color: _primaryColor.withValues(alpha: 0.3)),
                                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                     ),
                                   ),
@@ -295,7 +295,7 @@ class _AdminSupportInboxState extends State<AdminSupportInbox> {
       },
       showCheckmark: false,
       backgroundColor: Colors.white,
-      selectedColor: _primaryColor.withOpacity(0.1),
+      selectedColor: _primaryColor.withValues(alpha: 0.1),
       labelStyle: TextStyle(
         fontFamily: _fontFamily,
         color: isSelected ? _primaryColor : Colors.grey[500], 
@@ -304,7 +304,7 @@ class _AdminSupportInboxState extends State<AdminSupportInbox> {
       ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: isSelected ? _primaryColor.withOpacity(0.3) : Colors.grey.shade300),
+        side: BorderSide(color: isSelected ? _primaryColor.withValues(alpha: 0.3) : Colors.grey.shade300),
       ),
     );
   }
@@ -320,7 +320,7 @@ class _AdminSupportInboxState extends State<AdminSupportInbox> {
             decoration: BoxDecoration(
               color: Colors.white,
               shape: BoxShape.circle,
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 20, offset: const Offset(0, 4))],
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 20, offset: const Offset(0, 4))],
             ),
             child: Icon(Icons.inbox_rounded, size: 64, color: Colors.grey[300]),
           ),

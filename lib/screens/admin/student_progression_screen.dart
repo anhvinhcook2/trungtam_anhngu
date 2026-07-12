@@ -33,7 +33,7 @@ class StudentProgressionScreen extends StatelessWidget {
         scrolledUnderElevation: 0,
         centerTitle: true,
         iconTheme: IconThemeData(color: _primaryColor),
-        shape: Border(bottom: BorderSide(color: Colors.grey.withOpacity(0.1), width: 1)),
+        shape: Border(bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.1), width: 1)),
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
@@ -55,7 +55,7 @@ class StudentProgressionScreen extends StatelessWidget {
                     decoration: BoxDecoration(
                         color: Colors.white,
                         shape: BoxShape.circle,
-                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 20, offset: const Offset(0, 4))]
+                        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 20, offset: const Offset(0, 4))]
                     ),
                     child: Icon(Icons.event_busy_rounded, size: 64, color: Colors.grey[300]),
                   ),
@@ -89,14 +89,14 @@ class StudentProgressionScreen extends StatelessWidget {
                       ),
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
-                        BoxShadow(color: _primaryColor.withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 8))
+                        BoxShadow(color: _primaryColor.withValues(alpha: 0.3), blurRadius: 15, offset: const Offset(0, 8))
                       ],
                     ),
                     child: Row(
                       children: [
                         Container(
                           padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(color: Colors.white.withOpacity(0.15), shape: BoxShape.circle),
+                          decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.15), shape: BoxShape.circle),
                           child: const Icon(Icons.school_rounded, color: Colors.white, size: 36),
                         ),
                         const SizedBox(width: 16),
@@ -111,7 +111,7 @@ class StudentProgressionScreen extends StatelessWidget {
                               const SizedBox(height: 6),
                               Text(
                                 "Đã tham gia ${classes.length} khóa học",
-                                style: TextStyle(fontFamily: _fontFamily, color: Colors.white.withOpacity(0.8), fontSize: 14),
+                                style: TextStyle(fontFamily: _fontFamily, color: Colors.white.withValues(alpha: 0.8), fontSize: 14),
                               ),
                             ],
                           ),
@@ -144,14 +144,14 @@ class StudentProgressionScreen extends StatelessWidget {
                                       color: Colors.white,
                                       shape: BoxShape.circle,
                                       border: Border.all(color: _primaryColor, width: 4),
-                                      boxShadow: [BoxShadow(color: _primaryColor.withOpacity(0.3), blurRadius: 6, offset: const Offset(0, 2))],
+                                      boxShadow: [BoxShadow(color: _primaryColor.withValues(alpha: 0.3), blurRadius: 6, offset: const Offset(0, 2))],
                                     ),
                                   ),
                                   if (!isLast)
                                     Expanded(
                                       child: Container(
                                         width: 2,
-                                        color: _primaryColor.withOpacity(0.2),
+                                        color: _primaryColor.withValues(alpha: 0.2),
                                       ),
                                     ),
                                 ],
@@ -168,7 +168,7 @@ class StudentProgressionScreen extends StatelessWidget {
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(16),
                                   boxShadow: [
-                                    BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 15, offset: const Offset(0, 6))
+                                    BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 15, offset: const Offset(0, 6))
                                   ],
                                 ),
                                 child: Column(
@@ -197,7 +197,7 @@ class StudentProgressionScreen extends StatelessWidget {
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                           decoration: BoxDecoration(
-                                            color: _primaryColor.withOpacity(0.08),
+                                            color: _primaryColor.withValues(alpha: 0.08),
                                             borderRadius: BorderRadius.circular(8),
                                           ),
                                           child: Row(
@@ -215,7 +215,7 @@ class StudentProgressionScreen extends StatelessWidget {
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                           decoration: BoxDecoration(
-                                            color: _accentColor.withOpacity(0.1),
+                                            color: _accentColor.withValues(alpha: 0.1),
                                             borderRadius: BorderRadius.circular(8),
                                           ),
                                           child: Row(

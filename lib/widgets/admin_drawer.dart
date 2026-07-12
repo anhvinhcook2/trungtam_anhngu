@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../utils/app_theme.dart';
+import '../screens/admin/admin_chat_list_screen.dart';
+
 import '../services/auth_service.dart';
 import '../screens/auth_screen.dart';
 import '../screens/admin/admin_dashboard.dart';
@@ -9,15 +10,14 @@ import '../screens/admin/admin_student_management.dart';
 import '../screens/admin/admin_class_management.dart';
 import '../screens/admin/admin_schedule_management.dart';
 import '../screens/admin/admin_tuition_management.dart';
-import '../screens/admin/admin_support_inbox.dart';
+
 
 class AdminDrawer extends StatelessWidget {
   const AdminDrawer({super.key});
 
-  // --- BẢNG MÀU CHUẨN CONCEPT ORGANIC TECH ---
-  final Color _primaryColor = const Color(0xFF004D40); // Deep Jungle Green
-  final Color _secondaryColor = const Color(0xFF00695C); // Teal nhạt hơn
-  final Color _bgColor = const Color(0xFFF8F9FA); // Light Grey
+  final Color _primaryColor = const Color(0xFF004D40);
+  final Color _secondaryColor = const Color(0xFF00695C);
+  final Color _bgColor = const Color(0xFFF8F9FA);
   final String _fontFamily = 'Nunito';
 
   Future<void> _logout(BuildContext context) async {
@@ -93,7 +93,7 @@ class AdminDrawer extends StatelessWidget {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: _primaryColor.withOpacity(0.3),
+                  color: _primaryColor.withValues(alpha: 0.3),
                   blurRadius: 20,
                   offset: const Offset(0, 8),
                 )
@@ -107,7 +107,7 @@ class AdminDrawer extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(3),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         shape: BoxShape.circle,
                       ),
                       child: const CircleAvatar(
@@ -139,14 +139,14 @@ class AdminDrawer extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.15),
+                    color: Colors.black.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
                     FirebaseAuth.instance.currentUser?.email ?? "admin@trungtam.com",
                     style: TextStyle(
                       fontFamily: _fontFamily,
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                     ),
@@ -169,7 +169,8 @@ class AdminDrawer extends StatelessWidget {
                 _buildMenuItem(context, "Quản lý Lớp học", Icons.class_rounded, const AdminClassManagement()),
                 _buildMenuItem(context, "Quản lý Lịch học", Icons.calendar_today_rounded, const AdminScheduleManagement()),
                 _buildMenuItem(context, "Quản lý Học phí", Icons.payments_rounded, const AdminTuitionManagement()),
-                
+                _buildMenuItem(context, "Chat", Icons.chat_rounded, const AdminChatListScreen()),
+
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 16, horizontal: 8),
                   child: Divider(color: Color(0xFFE2E8F0), height: 1),
@@ -225,7 +226,7 @@ class AdminDrawer extends StatelessWidget {
       child: ListTile(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), // Bo góc 16px
         hoverColor: _bgColor,
-        splashColor: _primaryColor.withOpacity(0.1),
+        splashColor: _primaryColor.withValues(alpha: 0.1),
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(

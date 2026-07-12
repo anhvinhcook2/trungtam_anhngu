@@ -96,7 +96,7 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
         backgroundColor: Colors.white,
         elevation: 0,
         scrolledUnderElevation: 0,
-        shape: Border(bottom: BorderSide(color: Colors.grey.withOpacity(0.1), width: 1)),
+        shape: Border(bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.1), width: 1)),
         title: const Text(
           "GIẢNG VIÊN", 
           style: TextStyle(fontFamily: _fontFamily, fontWeight: FontWeight.w900, fontSize: 16, color: _primaryColor, letterSpacing: 1.2),
@@ -170,7 +170,7 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(20), // Thẻ bo tròn 20px 
                   boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 20, offset: const Offset(0, 8))
+                    BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 20, offset: const Offset(0, 8))
                   ],
                 ),
                 child: Material(
@@ -195,7 +195,7 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
                               ),
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                decoration: BoxDecoration(color: _primaryColor.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                                decoration: BoxDecoration(color: _primaryColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
                                 child: Text("${studentIds.length} Học viên", style: const TextStyle(fontFamily: _fontFamily, color: _primaryColor, fontWeight: FontWeight.w800, fontSize: 13)),
                               )
                             ],
@@ -205,7 +205,7 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
                           // Nút Báo cáo nhanh dùng Accent Color
                           ElevatedButton.icon(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: _accentColor.withOpacity(0.15),
+                              backgroundColor: _accentColor.withValues(alpha: 0.15),
                               foregroundColor: _accentColor,
                               elevation: 0,
                               shadowColor: Colors.transparent,
@@ -246,7 +246,7 @@ class ClassStudentsScreen extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 0,
         scrolledUnderElevation: 0,
-        shape: Border(bottom: BorderSide(color: Colors.grey.withOpacity(0.1), width: 1)),
+        shape: Border(bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.1), width: 1)),
         iconTheme: const IconThemeData(color: _primaryColor),
         actions: [
           IconButton(
@@ -287,14 +287,14 @@ class ClassStudentsScreen extends StatelessWidget {
                         color: Colors.white, 
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
-                          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))
+                          BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4))
                         ],
                       ),
                       child: ListTile(
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         leading: Container(
                           padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(color: _primaryColor.withOpacity(0.1), shape: BoxShape.circle),
+                          decoration: BoxDecoration(color: _primaryColor.withValues(alpha: 0.1), shape: BoxShape.circle),
                           child: const Icon(Icons.person, color: _primaryColor, size: 24),
                         ),
                         title: Text(s['name'], style: const TextStyle(fontFamily: _fontFamily, fontWeight: FontWeight.bold, color: Colors.black87, fontSize: 16)),
@@ -422,7 +422,7 @@ class StudentHistoryScreen extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 0,
         scrolledUnderElevation: 0,
-        shape: Border(bottom: BorderSide(color: Colors.grey.withOpacity(0.1), width: 1)),
+        shape: Border(bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.1), width: 1)),
         iconTheme: const IconThemeData(color: _primaryColor),
       ),
       body: StreamBuilder<QuerySnapshot>(
@@ -464,7 +464,7 @@ class StudentHistoryScreen extends StatelessWidget {
                   color: Colors.white, 
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 15, offset: const Offset(0, 5))
+                    BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 15, offset: const Offset(0, 5))
                   ],
                 ),
                 padding: const EdgeInsets.all(20),
@@ -483,7 +483,7 @@ class StudentHistoryScreen extends StatelessWidget {
                         ),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                          decoration: BoxDecoration(color: const Color(0xFF10B981).withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                          decoration: BoxDecoration(color: const Color(0xFF10B981).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
                           child: Text("Điểm: ${r['scores'] ?? r['score']}", style: const TextStyle(fontFamily: _fontFamily, color: Color(0xFF10B981), fontWeight: FontWeight.w800, fontSize: 14)),
                         ),
                       ],
